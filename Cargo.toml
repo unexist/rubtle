@@ -1,0 +1,7 @@
+[workspace]
+
+members = [
+    "rubtle",
+    #"rublle-axui",
+    "rubtle-duktape",
+]
