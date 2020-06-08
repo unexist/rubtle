@@ -1,0 +1,11 @@
+[package]
+name = "rubtle"
+version = "0.1.0"
+authors = ["unexist"]
+edition = "2018"
+
+[dependencies]
+
+[dependencies.rubtle-duktape]
+version = "0.1.0"
+path = "../rubtle-duktape"
