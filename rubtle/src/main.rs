@@ -1,5 +1,3 @@
-mod rubtle;
-
 use rubtle::Rubtle;
 
 use std::{env, fs};

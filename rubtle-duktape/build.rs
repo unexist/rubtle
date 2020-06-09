@@ -11,6 +11,11 @@ fn main() {
     /* Tell cargo to invalidate the built crate whenever the wrapper changes */
     println!("cargo:rerun-if-changed=duktape_wrapper.h");
 
+    if cfg!(target_os = "macos") {
+        println!("cargo:rustc-env=LIBCLANG_PATH=/usr/local/opt/llvm/bin");
+        println!("cargo:rustc-env=LLVM_CONFIG_PATH=/usr/local/opt/llvm/bin/llvm-config");
+    }
+
     /* Create bindings */
     let bindings = bindgen::Builder::default()
         .header("src/duktape_wrapper.h")
