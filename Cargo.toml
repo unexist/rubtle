@@ -1,7 +1,8 @@
 [workspace]
 
 members = [
-    "rubtle",
     #"rublle-axui",
     "rubtle-duktape",
+    "rubtle-lib",
+    "rubtle",
 ]
