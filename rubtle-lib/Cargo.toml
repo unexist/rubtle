@@ -1,8 +1,15 @@
 [package]
 name = "rubtle-lib"
 version = "0.1.0"
-authors = ["unexist"]
+description = "Rubtle library"
+authors = [
+    "Christoph Kappel <unexist@subforge.org>"
+]
 edition = "2018"
+license = "GPLv2"
+license-file = "LICENSE"
+homepage = "https://subforge.org"
+repository = "https://hg.subforge.org/rubtle"
 
 [dependencies]
 cesu8 = "1.1.0"

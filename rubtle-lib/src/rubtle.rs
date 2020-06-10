@@ -1,3 +1,14 @@
+///
+/// @package Rubtle-Lib
+///
+/// @file Rubtle functions
+/// @copyright 2020 Christoph Kappel <unexist@subforge.org>
+/// @version $Id$
+///
+/// This program can be distributed under the terms of the GNU GPLv2.
+/// See the file LICENSE for details.
+///
+
 use cesu8::{to_cesu8, from_cesu8};
 
 use std::{process, ptr, slice};
@@ -14,17 +25,29 @@ macro_rules! cstr {
 }
 
 pub struct Rubtle {
+    /// Duktape context
     pub(crate) ctx: *mut ffi::duk_context,
 }
 
 impl Rubtle {
+
+    ///
+    /// Create a new Rubtle instance
+    ///
+
     pub fn new() -> Rubtle {
         Rubtle {
             ctx: unsafe { Self::create_heap() },
         }
     }
 
-    pub fn push_str(&self, str_val: &str) {
+    ///
+    /// Push string onto duktape stack
+    ///
+    /// * `str_val` - String value to push
+    ///
+
+    pub(crate) fn push_str(&self, str_val: &str) {
         let cstr = CString::new(to_cesu8(str_val));
 
         match cstr {
@@ -38,7 +61,21 @@ impl Rubtle {
         }
     }
 
-    pub fn pop_str(&self, idx: ffi::duk_idx_t) -> String {
+    ///
+    /// Pop most recent string from duktape stack
+    ///
+
+    pub(crate) fn pop_str(&self) -> String {
+        self.pop_str_idx(-1)
+    }
+
+    ///
+    /// Pop string with given index from duktape stack
+    ///
+    /// * `idx` - Stack index
+    //
+
+    pub(crate) fn pop_str_idx(&self, idx: ffi::duk_idx_t) -> String {
         let mut len = 0;
         let lstring;
         let bytes;
@@ -61,6 +98,12 @@ impl Rubtle {
         }
     }
 
+    ///
+    /// Eval given string
+    ///
+    /// * `str_val` - String to eval
+    //
+
     pub fn eval(&self, str_val: &str) {
         let cstr = CString::new(str_val);
 
@@ -75,6 +118,10 @@ impl Rubtle {
         }
     }
 
+    ///
+    /// Create and init duktape context
+    ///
+
     unsafe fn create_heap() -> *mut ffi::duk_context {
         let ctx = ffi::duk_create_heap(None, None, None,
             ptr::null_mut(), Some(fatal_handler));
@@ -82,6 +129,13 @@ impl Rubtle {
         ctx
     }
 }
+
+///
+/// Handle duktape fatals errors - print the error and abort
+///
+/// * `data` - Userdata supplied to context
+/// * `msg` - Error message
+///
 
 unsafe extern "C" fn fatal_handler(_udata: *mut c_void,
     msg: *const c_char)
