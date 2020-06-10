@@ -1,7 +1,7 @@
 ///
 /// @package Rubtle-Lib
 ///
-/// @file String tests
+/// @file Rubtle tests
 /// @copyright 2020 Christoph Kappel <unexist@subforge.org>
 /// @version $Id$
 ///
@@ -12,20 +12,26 @@
 use crate::Rubtle;
 
 #[test]
-fn push_and_pop_str() {
+#[ignore]
+fn push_and_pop_string_value() {
     let rubtle = Rubtle::new();
 
-    rubtle.push_str("String Test");
-    let cstring = rubtle.pop_str(0);
+    let rval = Value::new("String Test");
 
-    println!("{}", cstring)
+    rubtle.push_value(rval);
+    let rval2 = rubtle.pop_value(0);
+
+    println!("{:?}", rval);
+
+    assert_eq!(rval, rval2);
 }
 
 #[test]
+#[ignore]
 fn evil_eval_test() {
     let rubtle = Rubtle::new();
 
     rubtle.eval(r#"
-        let rublte = 'yeah';
+        let rubtle = 'yeah';
     "#);
 }

@@ -1,3 +1,14 @@
+///
+/// @package Rubtle-Duktape
+///
+/// @file Rubtle bindgen builder
+/// @copyright 2020 Christoph Kappel <unexist@subforge.org>
+/// @version $Id$
+///
+/// This program can be distributed under the terms of the GNU GPLv2.
+/// See the file LICENSE for details.
+///
+
 extern crate bindgen;
 extern crate cc;
 
