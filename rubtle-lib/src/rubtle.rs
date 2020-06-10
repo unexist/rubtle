@@ -70,7 +70,7 @@ impl Rubtle {
     }
 
     ///
-    /// Pop string with given index from duktape stack
+    /// Pop string on given index from duktape stack
     ///
     /// * `idx` - Stack index
     //
@@ -89,7 +89,7 @@ impl Rubtle {
             }
 
             bytes = slice::from_raw_parts(lstring as *const u8,
-            len as usize);
+                len as usize);
         }
 
         match from_cesu8(bytes) {
