@@ -1,8 +1,15 @@
 [package]
 name = "rubtle-duktape"
 version = "0.1.0"
-authors = ["unexist"]
+description = "Duktape bindings"
+authors = [
+    "Christoph Kappel <unexist@subforge.org>"
+]
 edition = "2018"
+license = "GPLv2"
+license-file = "LICENSE"
+homepage = "https://subforge.org"
+repository = "https://hg.subforge.org/rubtle"
 
 [build-dependencies]
 bindgen = "0.54"
