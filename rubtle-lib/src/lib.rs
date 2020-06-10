@@ -12,9 +12,12 @@
 extern crate cesu8;
 extern crate rubtle_duktape as ffi;
 
-#[cfg(test)] mod tests;
+#[macro_use] mod util;
+
 mod rubtle;
 mod value;
 
+#[cfg(test)] mod tests;
+
 pub use rubtle::Rubtle;
-pub use rubtle::Value;
+pub use value::Value;

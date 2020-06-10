@@ -15,14 +15,7 @@ use std::{process, ptr, slice};
 use std::ffi::{CStr, CString};
 use std::os::raw::{c_char, c_void};
 
-macro_rules! cstr {
-    ($s:expr) => (
-        concat!($s, "\0")
-            as *const str
-            as *const [::std::os::raw::c_char]
-            as *const ::std::os::raw::c_char
-    )
-}
+use crate::Value;
 
 pub struct Rubtle {
     /// Duktape context
@@ -42,60 +35,30 @@ impl Rubtle {
     }
 
     ///
-    /// Push string onto duktape stack
+    /// Push value onto duktape stack
     ///
-    /// * `str_val` - String value to push
+    /// * `rval` - String value to push
     ///
 
-    pub(crate) fn push_str(&self, str_val: &str) {
-        let cstr = CString::new(to_cesu8(str_val));
-
-        match cstr {
-            Ok(val) => {
-                unsafe {
-                    ffi::duk_push_lstring( self.ctx, val.as_ptr(),
-                        val.as_bytes().len() as u64);
-                }
-            },
-            Err(e) => eprintln!("couldn't push str {}: {}", str_val, e),
-        }
+    pub(crate) fn push_value(&self, rval: Value) {
     }
 
     ///
-    /// Pop most recent string from duktape stack
+    /// Pop most recent value from duktape stack
     ///
 
-    pub(crate) fn pop_str(&self) -> String {
-        self.pop_str_idx(-1)
+    pub(crate) fn pop_value(&self) -> Value {
+        self.pop_value_at(-1)
     }
 
     ///
-    /// Pop string on given index from duktape stack
+    /// Pop value on given index from duktape stack
     ///
     /// * `idx` - Stack index
     //
 
-    pub(crate) fn pop_str_idx(&self, idx: ffi::duk_idx_t) -> String {
-        let mut len = 0;
-        let lstring;
-        let bytes;
-
-        unsafe {
-            lstring = ffi::duk_get_lstring_default(self.ctx,
-                idx, &mut len, cstr!(""), 0);
-
-            if lstring.is_null() {
-                return String::new();
-            }
-
-            bytes = slice::from_raw_parts(lstring as *const u8,
-                len as usize);
-        }
-
-        match from_cesu8(bytes) {
-            Ok(string) => string.into_owned(),
-            Err(_) => String::new()
-        }
+    pub(crate) fn pop_value_at(&self, idx: ffi::duk_idx_t) -> Value {
+        Value::from(4)
     }
 
     ///
@@ -116,6 +79,10 @@ impl Rubtle {
             },
             Err(e) => eprintln!("couldn't eval str {}: {}", str_val, e),
         }
+    }
+
+    pub fn create_global(&self) {
+
     }
 
     ///

@@ -9,17 +9,17 @@
 /// See the file LICENSE for details.
 ///
 
-use crate::Rubtle;
+use crate::{Rubtle, Value};
 
 #[test]
 #[ignore]
-fn push_and_pop_string_value() {
+fn push_and_pop_number_value() {
     let rubtle = Rubtle::new();
 
-    let rval = Value::new("String Test");
+    let rval = Value::from(4);
 
     rubtle.push_value(rval);
-    let rval2 = rubtle.pop_value(0);
+    let rval2 = rubtle.pop_value();
 
     println!("{:?}", rval);
 
