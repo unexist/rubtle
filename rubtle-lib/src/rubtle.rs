@@ -24,30 +24,36 @@ impl Rubtle {
         }
     }
 
-    pub unsafe fn push_str(&self, str_val: &str) {
+    pub fn push_str(&self, str_val: &str) {
         let cstr = CString::new(to_cesu8(str_val));
 
         match cstr {
             Ok(val) => {
-                ffi::duk_push_lstring( self.ctx, val.as_ptr(),
-                    val.as_bytes().len() as u64);
+                unsafe {
+                    ffi::duk_push_lstring( self.ctx, val.as_ptr(),
+                        val.as_bytes().len() as u64);
+                }
             },
             Err(e) => eprintln!("couldn't push str {}: {}", str_val, e),
         }
     }
 
-    pub unsafe fn pop_str(&self, idx: ffi::duk_idx_t) -> String {
+    pub fn pop_str(&self, idx: ffi::duk_idx_t) -> String {
         let mut len = 0;
+        let lstring;
+        let bytes;
 
-        let string = ffi::duk_get_lstring_default(self.ctx,
-            idx, &mut len, cstr!(""), 0);
+        unsafe {
+            lstring = ffi::duk_get_lstring_default(self.ctx,
+                idx, &mut len, cstr!(""), 0);
 
-        if string.is_null() {
-            return String::new();
-        }
+            if lstring.is_null() {
+                return String::new();
+            }
 
-        let bytes = slice::from_raw_parts(string as *const u8,
+            bytes = slice::from_raw_parts(lstring as *const u8,
             len as usize);
+        }
 
         match from_cesu8(bytes) {
             Ok(string) => string.into_owned(),
@@ -55,13 +61,15 @@ impl Rubtle {
         }
     }
 
-    pub unsafe fn eval(&self, str_val: &str) {
+    pub fn eval(&self, str_val: &str) {
         let cstr = CString::new(str_val);
 
         match cstr {
             Ok(val) => {
-                ffi::duk_eval_raw(self.ctx, val.as_ptr(),
-                    val.into_bytes().len() as u64, 0);
+                unsafe {
+                    ffi::duk_eval_raw(self.ctx, val.as_ptr(),
+                        val.into_bytes().len() as u64, 0);
+                }
             },
             Err(e) => eprintln!("couldn't eval str {}: {}", str_val, e),
         }

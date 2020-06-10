@@ -1,3 +1,5 @@
+extern crate rubtle_lib as rubtle;
+
 use rubtle::Rubtle;
 
 use std::{env, fs};
