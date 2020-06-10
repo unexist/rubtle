@@ -1,7 +1,8 @@
 syntax: glob
 
-/build/
-/target/
+build
+target
 Cargo.lock
-*.rs.bk
-^.rust/
+.rust
+*.DS_Store
+*.bak
