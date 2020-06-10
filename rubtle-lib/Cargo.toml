@@ -6,7 +6,7 @@ authors = [
     "Christoph Kappel <unexist@subforge.org>"
 ]
 edition = "2018"
-license = "GPLv2"
+#license = "GPLv2"
 license-file = "LICENSE"
 homepage = "https://subforge.org"
 repository = "https://hg.subforge.org/rubtle"
