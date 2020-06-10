@@ -9,15 +9,15 @@
 /// See the file LICENSE for details.
 ///
 
-use crate::Rubtle;
+use crate::Value;
 
 #[test]
-fn create_string_value() {
-    let literal = "String Test";
-    let rval = Value::new(literal);
+fn create_number_value() {
+    let num: i32 = 4;
+    let rval = Value::from(num);
 
     println!("{:?}", rval);
 
-    assert!(rval.is_string());
-    assert_eq!(literal, rval.)
+    assert!(rval.is_number());
+    assert_eq!(num, rval.into());
 }
