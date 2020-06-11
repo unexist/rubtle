@@ -12,12 +12,23 @@
 use crate::Value;
 
 #[test]
+fn create_bool_value() {
+    let val: bool = true;
+    let rval = Value::from(val);
+
+    println!("{:?}", rval);
+
+    assert!(rval.is_bool());
+    assert_eq!(val, rval.into());
+}
+
+#[test]
 fn create_number_value() {
-    let num: i32 = 4;
-    let rval = Value::from(num);
+    let val: i32 = 4;
+    let rval = Value::from(val);
 
     println!("{:?}", rval);
 
     assert!(rval.is_number());
-    assert_eq!(num, rval.into());
+    assert_eq!(val, rval.into());
 }

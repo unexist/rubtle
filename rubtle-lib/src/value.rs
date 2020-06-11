@@ -13,10 +13,19 @@ use std::convert::From;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Value {
-    Number(i32)
+    Boolean(bool),
+    Number(i32),
 }
 
 impl Value {
+    pub fn is_bool(&self) -> bool {
+        if let Value::Boolean(_) = *self {
+            true
+        } else {
+            false
+        }
+    }
+
     pub fn is_number(&self) -> bool {
         if let Value::Number(_) = *self {
             true
@@ -26,18 +35,41 @@ impl Value {
     }
 }
 
-impl From<Value> for i32 {
-    fn from(src: Value) -> i32 {
-        if let Value::Number(val) = src {
-            val
-        } else {
-            -1
+macro_rules! convert_num_type {
+    ($num_type: ty) => {
+        impl From<Value> for $num_type {
+            fn from(src: Value) -> $num_type {
+                if let Value::Number(val) = src {
+                    val as $num_type
+                } else {
+                    -1 as $num_type
+                }
+            }
+        }
+
+        impl From<$num_type> for Value {
+            fn from(src: $num_type) -> Self {
+                Value::Number(src as i32)
+            }
         }
     }
 }
 
-impl From<i32> for Value {
-    fn from(src: i32) -> Self {
-        Value::Number(src)
+convert_num_type!(i32);
+convert_num_type!(f32);
+
+impl From<Value> for bool {
+    fn from(src: Value) -> bool {
+        if let Value::Boolean(val) = src {
+            val
+        } else {
+            false
+        }
+    }
+}
+
+impl From<bool> for Value {
+    fn from(src: bool) -> Self {
+        Value::Boolean(src)
     }
 }
