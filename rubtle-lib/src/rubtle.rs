@@ -41,6 +41,22 @@ impl Rubtle {
     ///
 
     pub(crate) fn push_value(&self, rval: Value) {
+        unsafe {
+            match rval {
+                Value::Boolean(val) => {
+                    ffi::duk_require_stack(self.ctx, 1);
+                    ffi::duk_push_boolean(self.ctx,
+                        if val { 1 } else { 0 });
+                },
+                Value::Number(val) => {
+                    ffi::duk_require_stack(self.ctx, 1);
+                    ffi::duk_push_number(self.ctx, val);
+                },
+                _ => {
+                    unimplemented!();
+                },
+            }
+        }
     }
 
     ///
@@ -58,7 +74,27 @@ impl Rubtle {
     //
 
     pub(crate) fn pop_value_at(&self, idx: ffi::duk_idx_t) -> Value {
-        Value::from(4)
+        unsafe {
+            match ffi::duk_get_type(self.ctx, idx) as u32 {
+               ffi::DUK_TYPE_BOOLEAN => {
+                    let dval = ffi::duk_get_boolean(self.ctx, idx);
+
+                    ffi::duk_remove(self.ctx, idx);
+
+                    Value::Boolean(0 != dval)
+                },
+                ffi::DUK_TYPE_NUMBER => {
+                    let dval = ffi::duk_get_number(self.ctx, idx);
+
+                    ffi::duk_remove(self.ctx, idx);
+
+                    Value::Number(dval)
+                },
+                _ => {
+                    unimplemented!();
+                },
+            }
+        }
     }
 
     ///
