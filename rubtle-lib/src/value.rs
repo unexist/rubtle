@@ -14,7 +14,7 @@ use std::convert::From;
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Value {
     Boolean(bool),
-    Number(i32),
+    Number(f64),
 }
 
 impl Value {
@@ -49,14 +49,14 @@ macro_rules! convert_num_type {
 
         impl From<$num_type> for Value {
             fn from(src: $num_type) -> Self {
-                Value::Number(src as i32)
+                Value::Number(src as f64)
             }
         }
     }
 }
 
 convert_num_type!(i32);
-convert_num_type!(f32);
+convert_num_type!(f64);
 
 impl From<Value> for bool {
     fn from(src: Value) -> bool {
