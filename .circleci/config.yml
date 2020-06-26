@@ -3,7 +3,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: circleci/rust:stretch
+      - image: circleci/rust:latest
 
     environment:
       TZ: "/usr/share/zoneinfo/Europe/Paris"
@@ -14,24 +14,13 @@ jobs:
           key: project-cache
       #- run:
       #    name: Check formatting
-      #    command: |
-      #      rustfmt --version
-      #      cargo fmt -- --write-mode=diff
-      #- run:
-      #    name: Nightly Build
-      #    command: |
-      #      rustup run nightly rustc --version --verbose
-      #      rustup run nightly cargo --version --verbose
-      #      rustup run nightly cargo build
+      #    command: cargo fmt -- --check
       - run:
           name: Stable Build
-          command: |
-            rustup run stable rustc --version --verbose
-            rustup run stable cargo --version --verbose
-            rustup run stable cargo build
+          command: cargo build
       - run:
           name: Test
-          command: rustup run stable cargo test
+          command: cargo test
       - save_cache:
           key: project-cache
           paths:
