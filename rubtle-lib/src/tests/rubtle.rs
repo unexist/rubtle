@@ -54,11 +54,10 @@ fn push_and_pop_string_value() {
 }
 
 #[test]
-#[ignore]
 fn evil_eval_test() {
     let rubtle = Rubtle::new();
 
     rubtle.eval(r#"
-        let rubtle = 'yeah';
+        var rubtle = 'yeah';
     "#);
 }
