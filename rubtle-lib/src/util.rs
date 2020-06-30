@@ -9,17 +9,7 @@
 /// See the file LICENSE for details.
 ///
 
-use std::os::raw::c_char;
-
-macro_rules! cstr {
-    ($s:expr) => (
-        concat!($s, "\0")
-            as *const str
-            as *const [::std::os::raw::c_char]
-            as *const ::std::os::raw::c_char
-    )
-}
-
+#[allow(unused_macros)]
 macro_rules! assert_stack {
     ($ctx:expr, $diff:expr, $body:block) => {
         {

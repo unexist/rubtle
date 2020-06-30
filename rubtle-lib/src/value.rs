@@ -11,10 +11,11 @@
 
 use std::convert::From;
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Value {
     Boolean(bool),
     Number(f64),
+    Str(String)
 }
 
 impl Value {
@@ -33,7 +34,49 @@ impl Value {
             false
         }
     }
+
+    pub fn is_string(&self) -> bool {
+        if let Value::Str(_) = *self {
+            true
+        } else {
+            false
+        }
+    }
 }
+
+/*impl Clone for Value {
+    fn clone(&self) -> Value {
+        match self {
+            Value::Boolean(val) => Value::Boolean(val.clone()),
+            Value::Number(val) => Value::Number(val.clone()),
+            Value::Str(val) => Value::Str(val.clone()),
+        }
+    }
+}*/
+
+///
+/// Boolean
+///
+
+impl From<Value> for bool {
+    fn from(src: Value) -> bool {
+        if let Value::Boolean(val) = src {
+            val
+        } else {
+            false
+        }
+    }
+}
+
+impl From<bool> for Value {
+    fn from(src: bool) -> Self {
+        Value::Boolean(src)
+    }
+}
+
+///
+/// Number
+///
 
 macro_rules! convert_num_type {
     ($num_type: ty) => {
@@ -58,18 +101,38 @@ macro_rules! convert_num_type {
 convert_num_type!(i32);
 convert_num_type!(f64);
 
-impl From<Value> for bool {
-    fn from(src: Value) -> bool {
-        if let Value::Boolean(val) = src {
+///
+/// String
+///
+
+impl From<Value> for String {
+    fn from(src: Value) -> String {
+        if let Value::Str(val) = src {
             val
         } else {
-            false
+            unimplemented!();
         }
     }
 }
 
-impl From<bool> for Value {
-    fn from(src: bool) -> Self {
-        Value::Boolean(src)
+impl From<String> for Value {
+    fn from(src: String) -> Self {
+        Value::Str(src)
+    }
+}
+
+impl From<Value> for &str {
+    fn from(src: Value) -> &'static str {
+        if let Value::Str(val) = src {
+            Box::leak(val.into_boxed_str())
+        } else {
+            unimplemented!();
+        }
+    }
+}
+
+impl From<&str> for Value {
+    fn from(src: &str) -> Self {
+        Value::Str(src.into())
     }
 }
