@@ -40,17 +40,29 @@ impl Rubtle {
     /// * `rval` - String value to push
     ///
 
-    pub(crate) fn push_value(&self, rval: Value) {
+    pub(crate) fn push_value(&self, rval: &Value) {
         unsafe {
             match rval {
                 Value::Boolean(val) => {
                     ffi::duk_require_stack(self.ctx, 1);
                     ffi::duk_push_boolean(self.ctx,
-                        if val { 1 } else { 0 });
+                        if *val { 1 } else { 0 });
                 },
                 Value::Number(val) => {
                     ffi::duk_require_stack(self.ctx, 1);
-                    ffi::duk_push_number(self.ctx, val);
+                    ffi::duk_push_number(self.ctx, *val);
+                },
+                Value::Str(val) => {
+                    let cstr = CString::new(to_cesu8(&val[..]));
+
+                    match cstr {
+                        Ok(cval) => {
+                            ffi::duk_require_stack(self.ctx, 1);
+                            ffi::duk_push_lstring(self.ctx,
+                                cval.as_ptr(), cval.as_bytes().len() as u64);
+                        },
+                        Err(_) => unimplemented!()
+                    }
                 },
                 _ => {
                     unimplemented!();
@@ -89,6 +101,26 @@ impl Rubtle {
                     ffi::duk_remove(self.ctx, idx);
 
                     Value::Number(dval)
+                },
+                ffi::DUK_TYPE_STRING => {
+                    let mut len = 0;
+
+                    let dval = ffi::duk_get_lstring(self.ctx,
+                        idx, &mut len);
+
+                        if dval.is_null() {
+                            unimplemented!();
+                        }
+
+                        let bytes = slice::from_raw_parts(dval as *const u8,
+                            len as usize);
+
+                        match from_cesu8(bytes) {
+                            Ok(string) => {
+                                Value::Str(string.into_owned())
+                            },
+                            Err(_) => unimplemented!()
+                        }
                 },
                 _ => {
                     unimplemented!();

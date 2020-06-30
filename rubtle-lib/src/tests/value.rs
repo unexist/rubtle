@@ -32,3 +32,16 @@ fn create_number_value() {
     assert!(rval.is_number());
     assert_eq!(val, rval.into());
 }
+
+#[test]
+fn create_string_value() {
+    let val = "Test";
+    let rval = Value::from(val);
+
+    println!("{:?}", rval);
+
+    assert!(rval.is_string());
+
+    let rval2: &str = rval.into();
+    assert_eq!(val, rval2);
+}
