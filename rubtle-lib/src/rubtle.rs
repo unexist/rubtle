@@ -142,7 +142,11 @@ impl Rubtle {
             Ok(val) => {
                 unsafe {
                     ffi::duk_eval_raw(self.ctx, val.as_ptr(),
-                        val.into_bytes().len() as u64, 0);
+                        val.into_bytes().len() as u64,
+                            ffi::DUK_COMPILE_EVAL|
+                            ffi::DUK_COMPILE_NOSOURCE|
+                            ffi::DUK_COMPILE_NORESULT|
+                            ffi::DUK_COMPILE_NOFILENAME);
                 }
             },
             Err(e) => eprintln!("couldn't eval str {}: {}", str_val, e),
