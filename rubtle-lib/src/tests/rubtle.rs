@@ -17,7 +17,7 @@ fn push_and_pop_bool_value() {
 
     let rval = Value::from(true);
 
-    rubtle.push_value(rval);
+    rubtle.push_value(&rval);
     let rval2 = rubtle.pop_value();
 
     println!("{:?}", rval);
@@ -31,7 +31,21 @@ fn push_and_pop_number_value() {
 
     let rval = Value::from(4);
 
-    rubtle.push_value(rval);
+    rubtle.push_value(&rval);
+    let rval2 = rubtle.pop_value();
+
+    println!("{:?}", rval);
+
+    assert_eq!(rval, rval2);
+}
+
+#[test]
+fn push_and_pop_string_value() {
+    let rubtle = Rubtle::new();
+
+    let rval = Value::from("Test");
+
+    rubtle.push_value(&rval);
     let rval2 = rubtle.pop_value();
 
     println!("{:?}", rval);
