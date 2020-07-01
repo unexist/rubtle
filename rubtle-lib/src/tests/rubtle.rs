@@ -61,6 +61,15 @@ fn push_global_number_value() {
 }
 
 #[test]
+fn evil_eval_test() {
+    let rubtle = Rubtle::new();
+
+    rubtle.eval(r#"
+        var rubtle = 'yeah';
+    "#);
+}
+
+#[test]
 fn push_global_string_value() {
     let rubtle = Rubtle::new();
     let rval = Value::from("rubtle");
@@ -80,13 +89,4 @@ fn pop_global_number_value() {
     let rval2 = Value::from(4);
 
     assert_eq!(rval, rval2);
-}
-
-#[test]
-fn evil_eval_test() {
-    let rubtle = Rubtle::new();
-
-    rubtle.eval(r#"
-        var rubtle = 'yeah';
-    "#);
 }
