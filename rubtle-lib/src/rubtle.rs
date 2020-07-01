@@ -29,7 +29,9 @@ impl Rubtle {
     ///
     /// # Example
     ///
-    ///     let rubtle = Rubtle::new()
+    ///     use rubtle_lib::Rubtle;
+    ///
+    ///     let rubtle = Rubtle::new();
     ///
 
     pub fn new() -> Rubtle {
@@ -47,13 +49,15 @@ impl Rubtle {
     ///
     /// # Example
     ///
-    ///     let rubtle = Rubtle::new();
-    ///     let dval = Value::from(4);
+    ///     use rubtle_lib::{Rubtle, Value};
     ///
-    ///     rubtle.push_value(dval);
+    ///     let rubtle = Rubtle::new();
+    ///     let rval = Value::from(4);
+    ///
+    ///     rubtle.push_value(&rval);
     ///
 
-    pub(crate) fn push_value(&self, rval: &Value) {
+    pub fn push_value(&self, rval: &Value) {
         unsafe {
             match rval {
                 Value::Boolean(val) => {
@@ -93,13 +97,15 @@ impl Rubtle {
     ///
     /// # Example
     ///
+    ///     use rubtle_lib::{Rubtle, Value};
+    ///
     ///     let rubtle = Rubtle::new();
     ///     let rval = Value::from(4);
     ///
-    ///     rubtle.push_global_value("rubtle", rval);
+    ///     rubtle.push_global_value("rubtle", &rval);
     ///
 
-    pub(crate) fn push_global_value(&self, name: &str, rval: &Value) {
+    pub fn push_global_value(&self, name: &str, rval: &Value) {
         unsafe {
             let cstr = CString::new(to_cesu8(name));
 
@@ -124,15 +130,17 @@ impl Rubtle {
     ///
     /// # Example
     ///
+    ///     use rubtle_lib::{Rubtle, Value};
+    ///
     ///     let rubtle = Rubtle::new();
-    ///     let dval = Value::from(4);
+    ///     let rval = Value::from(4);
     ///
-    ///     rubtle.push_value(dval);
+    ///     rubtle.push_value(&rval);
     ///
-    ///     let rval = rubtle.pop_value();
+    ///     let rval2 = rubtle.pop_value();
     ///
 
-    pub(crate) fn pop_value(&self) -> Value {
+    pub fn pop_value(&self) -> Value {
         self.pop_value_at(-1)
     }
 
@@ -149,15 +157,17 @@ impl Rubtle {
     ///
     /// # Example
     ///
+    ///     use rubtle_lib::{Rubtle, Value};
+    ///
     ///     let rubtle = Rubtle::new();
-    ///     let dval = Value::from(4);
+    ///     let rval = Value::from(4);
     ///
-    ///     rubtle.push_value(dval);
+    ///     rubtle.push_value(&rval);
     ///
-    ///     let rval = rubtle.pop_value_at(-1);
+    ///     let rval2 = rubtle.pop_value_at(-1);
     //
 
-    pub(crate) fn pop_value_at(&self, idx: ffi::duk_idx_t) -> Value {
+    pub fn pop_value_at(&self, idx: ffi::duk_idx_t) -> Value {
         unsafe {
             match ffi::duk_get_type(self.ctx, idx) as u32 {
                ffi::DUK_TYPE_BOOLEAN => {
@@ -212,6 +222,8 @@ impl Rubtle {
     ///
     /// # Example
     ///
+    ///     use rubtle_lib::{Rubtle, Value};
+    ///
     ///     let rubtle = Rubtle::new();
     ///
     ///     rubtle.eval(r#"
@@ -219,7 +231,7 @@ impl Rubtle {
     ///     "#)
     ///
 
-    pub(crate) fn eval(&self, str_val: &str) {
+    pub fn eval(&self, str_val: &str) {
         let cstr = CString::new(str_val);
 
         match cstr {
