@@ -16,8 +16,6 @@ fn create_bool_value() {
     let val: bool = true;
     let rval = Value::from(val);
 
-    println!("{:?}", rval);
-
     assert!(rval.is_bool());
     assert_eq!(val, rval.into());
 }
@@ -27,8 +25,6 @@ fn create_number_value() {
     let val: i32 = 4;
     let rval = Value::from(val);
 
-    println!("{:?}", rval);
-
     assert!(rval.is_number());
     assert_eq!(val, rval.into());
 }
@@ -37,8 +33,6 @@ fn create_number_value() {
 fn create_string_value() {
     let val = "Test";
     let rval = Value::from(val);
-
-    println!("{:?}", rval);
 
     assert!(rval.is_string());
 
