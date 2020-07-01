@@ -44,16 +44,6 @@ impl Value {
     }
 }
 
-/*impl Clone for Value {
-    fn clone(&self) -> Value {
-        match self {
-            Value::Boolean(val) => Value::Boolean(val.clone()),
-            Value::Number(val) => Value::Number(val.clone()),
-            Value::Str(val) => Value::Str(val.clone()),
-        }
-    }
-}*/
-
 ///
 /// Boolean
 ///
