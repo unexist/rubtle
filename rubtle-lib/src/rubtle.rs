@@ -27,6 +27,10 @@ impl Rubtle {
     ///
     /// Create a new Rubtle instance
     ///
+    /// # Example
+    ///
+    ///     let rubtle = Rubtle::new()
+    ///
 
     pub fn new() -> Rubtle {
         Rubtle {
@@ -37,7 +41,16 @@ impl Rubtle {
     ///
     /// Push value onto duktape stack
     ///
+    /// # Arguments
+    ///
     /// * `rval` - String value to push
+    ///
+    /// # Example
+    ///
+    ///     let rubtle = Rubtle::new();
+    ///     let dval = Value::from(4);
+    ///
+    ///     rubtle.push_value(dval);
     ///
 
     pub(crate) fn push_value(&self, rval: &Value) {
@@ -48,10 +61,12 @@ impl Rubtle {
                     ffi::duk_push_boolean(self.ctx,
                         if *val { 1 } else { 0 });
                 },
+
                 Value::Number(val) => {
                     ffi::duk_require_stack(self.ctx, 1);
                     ffi::duk_push_number(self.ctx, *val);
                 },
+
                 Value::Str(val) => {
                     let cstr = CString::new(to_cesu8(&val[..]));
 
@@ -64,15 +79,57 @@ impl Rubtle {
                         Err(_) => unimplemented!()
                     }
                 },
-                _ => {
-                    unimplemented!();
+            }
+        }
+    }
+
+    ///
+    /// Push value to stack and assign a global reachable name
+    ///
+    /// # Arguments
+    ///
+    /// `name`- Name of the value
+    /// `rval` - The actual value
+    ///
+    /// # Example
+    ///
+    ///     let rubtle = Rubtle::new();
+    ///     let rval = Value::from(4);
+    ///
+    ///     rubtle.push_global_value("rubtle", rval);
+    ///
+
+    pub(crate) fn push_global_value(&self, name: &str, rval: &Value) {
+        unsafe {
+            let cstr = CString::new(to_cesu8(name));
+
+            match cstr {
+                Ok(cval) => {
+                    self.push_value(rval);
+
+                    ffi::duk_require_stack(self.ctx, 1);
+                    ffi::duk_put_global_string(self.ctx, cval.as_ptr());
                 },
+                Err(_) => unimplemented!()
             }
         }
     }
 
     ///
     /// Pop most recent value from duktape stack
+    ///
+    /// # Returns
+    ///
+    /// Any value on top of the stack as `Value`
+    ///
+    /// # Example
+    ///
+    ///     let rubtle = Rubtle::new();
+    ///     let dval = Value::from(4);
+    ///
+    ///     rubtle.push_value(dval);
+    ///
+    ///     let rval = rubtle.pop_value();
     ///
 
     pub(crate) fn pop_value(&self) -> Value {
@@ -82,7 +139,22 @@ impl Rubtle {
     ///
     /// Pop value on given index from duktape stack
     ///
-    /// * `idx` - Stack index
+    /// # Arguments
+    ///
+    /// * `idx` - Stack index; -1 for top
+    ///
+    /// # Returns
+    ///
+    /// Any value on top of the stack as `Value`
+    ///
+    /// # Example
+    ///
+    ///     let rubtle = Rubtle::new();
+    ///     let dval = Value::from(4);
+    ///
+    ///     rubtle.push_value(dval);
+    ///
+    ///     let rval = rubtle.pop_value_at(-1);
     //
 
     pub(crate) fn pop_value_at(&self, idx: ffi::duk_idx_t) -> Value {
@@ -95,6 +167,7 @@ impl Rubtle {
 
                     Value::Boolean(0 != dval)
                 },
+
                 ffi::DUK_TYPE_NUMBER => {
                     let dval = ffi::duk_get_number(self.ctx, idx);
 
@@ -102,6 +175,7 @@ impl Rubtle {
 
                     Value::Number(dval)
                 },
+
                 ffi::DUK_TYPE_STRING => {
                     let mut len = 0;
 
@@ -132,10 +206,20 @@ impl Rubtle {
     ///
     /// Eval given string
     ///
+    /// # Arugments
+    ///
     /// * `str_val` - String to eval
-    //
+    ///
+    /// # Example
+    ///
+    ///     let rubtle = Rubtle::new();
+    ///
+    ///     rubtle.eval(r#"
+    ///         var rubtle = 4;
+    ///     "#)
+    ///
 
-    pub fn eval(&self, str_val: &str) {
+    pub(crate) fn eval(&self, str_val: &str) {
         let cstr = CString::new(str_val);
 
         match cstr {
@@ -153,12 +237,12 @@ impl Rubtle {
         }
     }
 
-    pub fn create_global(&self) {
-
-    }
-
     ///
     /// Create and init duktape context
+    ///
+    /// # Returns
+    ///
+    /// A new duktape heap context
     ///
 
     unsafe fn create_heap() -> *mut ffi::duk_context {
@@ -171,6 +255,8 @@ impl Rubtle {
 
 ///
 /// Handle duktape fatals errors - print the error and abort
+///
+/// # Arguments
 ///
 /// * `data` - Userdata supplied to context
 /// * `msg` - Error message

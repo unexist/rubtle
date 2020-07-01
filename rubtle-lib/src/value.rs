@@ -19,6 +19,13 @@ pub enum Value {
 }
 
 impl Value {
+
+    ///
+    /// Check whether valie is a boolean
+    ///
+    /// * `idx` - Stack index
+    //
+
     pub fn is_bool(&self) -> bool {
         if let Value::Boolean(_) = *self {
             true
