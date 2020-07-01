@@ -114,9 +114,26 @@ impl Rubtle {
                     self.push_value(rval);
 
                     ffi::duk_require_stack(self.ctx, 1);
-                    ffi::duk_put_global_string(self.ctx, cval.as_ptr());
+                    ffi::duk_put_global_lstring(self.ctx,
+                        cval.as_ptr(), cval.as_bytes().len() as u64);
                 },
                 Err(_) => unimplemented!()
+            }
+        }
+    }
+
+    pub fn pop_global_value(&self, name: &str) -> Option<Value> {
+        unsafe {
+            let cstr = CString::new(to_cesu8(name));
+
+            match cstr {
+                Ok(cval) => {
+                    ffi::duk_get_global_lstring(self.ctx,
+                        cval.as_ptr(), cval.as_bytes().len() as u64);
+
+                    self.pop_value()
+                },
+                Err(_) => None
             }
         }
     }
@@ -137,10 +154,10 @@ impl Rubtle {
     ///
     ///     rubtle.push_value(&rval);
     ///
-    ///     let rval2 = rubtle.pop_value();
+    ///     let rval2 = rubtle.pop_value().unwrap();
     ///
 
-    pub fn pop_value(&self) -> Value {
+    pub fn pop_value(&self) -> Option<Value> {
         self.pop_value_at(-1)
     }
 
@@ -153,7 +170,7 @@ impl Rubtle {
     ///
     /// # Returns
     ///
-    /// Any value on top of the stack as `Value`
+    /// Any value on top of the stack as `Option<Value>`
     ///
     /// # Example
     ///
@@ -164,10 +181,10 @@ impl Rubtle {
     ///
     ///     rubtle.push_value(&rval);
     ///
-    ///     let rval2 = rubtle.pop_value_at(-1);
+    ///     let rval2 = rubtle.pop_value_at(-1).unwrap();
     //
 
-    pub fn pop_value_at(&self, idx: ffi::duk_idx_t) -> Value {
+    pub fn pop_value_at(&self, idx: ffi::duk_idx_t) -> Option<Value> {
         unsafe {
             match ffi::duk_get_type(self.ctx, idx) as u32 {
                ffi::DUK_TYPE_BOOLEAN => {
@@ -175,7 +192,7 @@ impl Rubtle {
 
                     ffi::duk_remove(self.ctx, idx);
 
-                    Value::Boolean(0 != dval)
+                    Some(Value::Boolean(0 != dval))
                 },
 
                 ffi::DUK_TYPE_NUMBER => {
@@ -183,7 +200,7 @@ impl Rubtle {
 
                     ffi::duk_remove(self.ctx, idx);
 
-                    Value::Number(dval)
+                    Some(Value::Number(dval))
                 },
 
                 ffi::DUK_TYPE_STRING => {
@@ -201,13 +218,14 @@ impl Rubtle {
 
                         match from_cesu8(bytes) {
                             Ok(string) => {
-                                Value::Str(string.into_owned())
+                                Some(Value::Str(string.into_owned()))
                             },
-                            Err(_) => unimplemented!()
+                            Err(_) => None
                         }
                 },
+
                 _ => {
-                    unimplemented!();
+                    None
                 },
             }
         }
@@ -222,7 +240,7 @@ impl Rubtle {
     ///
     /// # Example
     ///
-    ///     use rubtle_lib::{Rubtle, Value};
+    ///     use rubtle_lib::Rubtle;
     ///
     ///     let rubtle = Rubtle::new();
     ///
