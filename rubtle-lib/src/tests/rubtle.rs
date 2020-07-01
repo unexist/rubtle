@@ -11,6 +11,10 @@
 
 use crate::{Rubtle, Value};
 
+///
+/// Stack
+///
+
 #[test]
 fn push_and_pop_bool_value() {
     let rubtle = Rubtle::new();
@@ -44,21 +48,9 @@ fn push_and_pop_string_value() {
     assert_eq!(rval, rval2);
 }
 
-#[test]
-fn push_global_bool_value() {
-    let rubtle = Rubtle::new();
-    let rval = Value::from(true);
-
-    rubtle.push_global_value("rubtle", &rval);
-}
-
-#[test]
-fn push_global_number_value() {
-    let rubtle = Rubtle::new();
-    let rval = Value::from(4);
-
-    rubtle.push_global_value("rubtle", &rval);
-}
+///
+/// Eval
+///
 
 #[test]
 fn evil_eval_test() {
@@ -69,12 +61,47 @@ fn evil_eval_test() {
     "#);
 }
 
+///
+/// Global
+///
+
+#[test]
+fn push_global_bool_value() {
+    let rubtle = Rubtle::new();
+    let rval = Value::from(true);
+
+    rubtle.push_global_value("rubtle", &rval);
+}
+
+
+#[test]
+fn push_global_number_value() {
+    let rubtle = Rubtle::new();
+    let rval = Value::from(4);
+
+    rubtle.push_global_value("rubtle", &rval);
+}
+
 #[test]
 fn push_global_string_value() {
     let rubtle = Rubtle::new();
     let rval = Value::from("rubtle");
 
     rubtle.push_global_value("rubtle", &rval);
+}
+
+#[test]
+fn pop_global_bool_value() {
+    let rubtle = Rubtle::new();
+
+    rubtle.eval(r#"
+        var rubtle = true;
+    "#);
+
+    let rval = rubtle.pop_global_value("rubtle").unwrap();
+    let rval2 = Value::from(true);
+
+    assert_eq!(rval, rval2);
 }
 
 #[test]
@@ -87,6 +114,20 @@ fn pop_global_number_value() {
 
     let rval = rubtle.pop_global_value("rubtle").unwrap();
     let rval2 = Value::from(4);
+
+    assert_eq!(rval, rval2);
+}
+
+#[test]
+fn pop_global_string_value() {
+    let rubtle = Rubtle::new();
+
+    rubtle.eval(r#"
+        var rubtle = 'test';
+    "#);
+
+    let rval = rubtle.pop_global_value("rubtle").unwrap();
+    let rval2 = Value::from("test");
 
     assert_eq!(rval, rval2);
 }
