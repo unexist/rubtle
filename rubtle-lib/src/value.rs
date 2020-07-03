@@ -21,18 +21,28 @@ pub enum Value {
 impl Value {
 
     ///
-    /// Check whether valie is a boolean
+    /// Check whether value is a boolean
     ///
-    /// * `idx` - Stack index
-    //
+    /// Returns
+    ///
+    /// `true` if the value is a bool; otherwise `false`
+    ///
 
-    pub fn is_bool(&self) -> bool {
+    pub fn is_boolean(&self) -> bool {
         if let Value::Boolean(_) = *self {
             true
         } else {
             false
         }
     }
+
+    ///
+    /// Check whether value is a number
+    ///
+    /// Returns
+    ///
+    /// `true` if the value is a number; otherwise `false`
+    ///
 
     pub fn is_number(&self) -> bool {
         if let Value::Number(_) = *self {
@@ -42,11 +52,67 @@ impl Value {
         }
     }
 
+    ///
+    /// Check whether value is a string
+    ///
+    /// Returns
+    ///
+    /// `true` if the value is a string; otherwise `false`
+    ///
+
     pub fn is_string(&self) -> bool {
         if let Value::Str(_) = *self {
             true
         } else {
             false
+        }
+    }
+
+    ///
+    /// Return inner boolean value
+    ///
+    /// Returns
+    ///
+    /// `Option` either with value or without
+    ///
+
+    pub fn as_boolean(&self) -> Option<bool> {
+        if let Value::Boolean(value) = *self {
+            Some(value)
+        } else {
+            None
+        }
+    }
+
+    ///
+    /// Return inner boolean value
+    ///
+    /// Returns
+    ///
+    /// `Option` either with value or without
+    ///
+
+    pub fn as_number(&self) -> Option<f64> {
+        if let Value::Number(value) = *self {
+            Some(value)
+        } else {
+            None
+        }
+    }
+
+    ///
+    /// Return inner boolean value
+    ///
+    /// Returns
+    ///
+    /// `Option` either with value or without
+    ///
+
+    pub fn as_string(&self) -> Option<&String> {
+        if let Value::Str(ref value) = *self {
+            Some(value)
+        } else {
+            None
         }
     }
 }
