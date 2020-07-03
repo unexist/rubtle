@@ -16,8 +16,12 @@ extern crate rubtle_duktape as ffi;
 
 mod rubtle;
 mod value;
+mod invocation;
+mod result;
 
 #[cfg(test)] mod tests;
 
 pub use rubtle::Rubtle;
 pub use value::Value;
+pub use invocation::Invocation;
+pub use result::Result;
