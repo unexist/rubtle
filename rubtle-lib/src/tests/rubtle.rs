@@ -9,7 +9,7 @@
 /// See the file LICENSE for details.
 ///
 
-use crate::{Rubtle, Value};
+use crate::{Rubtle, Value, Invocation, Result};
 
 ///
 /// Stack
@@ -66,68 +66,82 @@ fn evil_eval_test() {
 ///
 
 #[test]
-fn push_global_bool_value() {
+fn set_global_bool_value() {
     let rubtle = Rubtle::new();
     let rval = Value::from(true);
 
-    rubtle.push_global_value("rubtle", &rval);
+    rubtle.set_global_value("rubtle", &rval);
 }
 
 
 #[test]
-fn push_global_number_value() {
+fn set_global_number_value() {
     let rubtle = Rubtle::new();
     let rval = Value::from(4);
 
-    rubtle.push_global_value("rubtle", &rval);
+    rubtle.set_global_value("rubtle", &rval);
 }
 
 #[test]
-fn push_global_string_value() {
+fn set_global_string_value() {
     let rubtle = Rubtle::new();
     let rval = Value::from("rubtle");
 
-    rubtle.push_global_value("rubtle", &rval);
+    rubtle.set_global_value("rubtle", &rval);
 }
 
 #[test]
-fn pop_global_bool_value() {
+fn get_global_bool_value() {
     let rubtle = Rubtle::new();
 
     rubtle.eval(r#"
         var rubtle = true;
     "#);
 
-    let rval = rubtle.pop_global_value("rubtle").unwrap();
+    let rval = rubtle.get_global_value("rubtle").unwrap();
     let rval2 = Value::from(true);
 
     assert_eq!(rval, rval2);
 }
 
 #[test]
-fn pop_global_number_value() {
+fn get_global_number_value() {
     let rubtle = Rubtle::new();
 
     rubtle.eval(r#"
         var rubtle = 4;
     "#);
 
-    let rval = rubtle.pop_global_value("rubtle").unwrap();
+    let rval = rubtle.get_global_value("rubtle").unwrap();
     let rval2 = Value::from(4);
 
     assert_eq!(rval, rval2);
 }
 
 #[test]
-fn pop_global_string_value() {
+fn get_global_string_value() {
     let rubtle = Rubtle::new();
 
     rubtle.eval(r#"
         var rubtle = 'test';
     "#);
 
-    let rval = rubtle.pop_global_value("rubtle").unwrap();
+    let rval = rubtle.get_global_value("rubtle").unwrap();
     let rval2 = Value::from("test");
 
     assert_eq!(rval, rval2);
+}
+
+#[test]
+#[ignore]
+fn set_global_function() {
+    let rubtle = Rubtle::new();
+
+    let square = |inv: Invocation| -> Result<Value> {
+        let i = inv.args.first().unwrap();
+
+        Ok(Value::from(i.as_number().unwrap() * i.as_number().unwrap()))
+    };
+
+    rubtle.set_global_function("square", square);
 }
