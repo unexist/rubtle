@@ -14,13 +14,18 @@ use cesu8::{to_cesu8, from_cesu8};
 use std::{process, ptr, slice};
 use std::ffi::{CStr, CString};
 use std::os::raw::{c_char, c_void};
+use std::panic::{AssertUnwindSafe, catch_unwind};
 
-use crate::Value;
+use crate::{Value, Invocation, Result};
 
 pub struct Rubtle {
     /// Duktape context
     pub(crate) ctx: *mut ffi::duk_context,
 }
+
+const FUNC: [i8; 6] = hidden_i8str!('f', 'u', 'n', 'c');
+
+pub(crate) type Callback = Box<dyn Fn(Invocation) -> Result<Value>>;
 
 impl Rubtle {
 
@@ -88,7 +93,7 @@ impl Rubtle {
     }
 
     ///
-    /// Push value to stack and assign a global reachable name
+    /// Set value to context and assign a global reachable name
     ///
     /// # Arguments
     ///
@@ -102,10 +107,10 @@ impl Rubtle {
     ///     let rubtle = Rubtle::new();
     ///     let rval = Value::from(4);
     ///
-    ///     rubtle.push_global_value("rubtle", &rval);
+    ///     rubtle.set_global_value("rubtle", &rval);
     ///
 
-    pub fn push_global_value(&self, name: &str, rval: &Value) {
+    pub fn set_global_value(&self, name: &str, rval: &Value) {
         unsafe {
             let cstr = CString::new(to_cesu8(name));
 
@@ -122,7 +127,27 @@ impl Rubtle {
         }
     }
 
-    pub fn pop_global_value(&self, name: &str) -> Option<Value> {
+    ///
+    /// Get value from context for given global reachable name
+    ///
+    /// # Arguments
+    ///
+    /// `name`- Name of the value
+    ///
+    /// # Returns
+    ///
+    /// Any value on top of the stack as `Option<Value>`
+    ///
+    /// # Example
+    ///
+    ///     use rubtle_lib::{Rubtle, Value};
+    ///
+    ///     let rubtle = Rubtle::new();
+    ///
+    ///     rubtle.get_global_value("rubtle");
+    ///
+
+    pub fn get_global_value(&self, name: &str) -> Option<Value> {
         unsafe {
             let cstr = CString::new(to_cesu8(name));
 
@@ -134,6 +159,80 @@ impl Rubtle {
                     self.pop_value()
                 },
                 Err(_) => None
+            }
+        }
+    }
+
+    pub fn set_global_function<F>(&self, name: &str, func: F)
+        where
+            F: Fn(Invocation) -> Result<Value>
+    {
+        unsafe extern "C" fn wrapper(ctx: *mut ffi::duk_context) ->
+            ffi::duk_ret_t
+        {
+            let rubtle = Rubtle { ctx };
+            let nargs = ffi::duk_get_top(ctx) as usize;
+            let mut args = Vec::with_capacity(nargs);
+
+            //ffi::duk_push_this(ctx);
+            //let this = ducc.pop_value();
+
+            for i in 0..nargs {
+                ffi::duk_dup(ctx, i as ffi::duk_idx_t);
+                args.push(rubtle.pop_value().unwrap());
+            }
+
+            let invocation = Invocation {
+                rubtle: &rubtle,
+                this: Value::from(1),
+                args: args,
+            };
+
+            ffi::duk_get_prop_string(ctx, -1, FUNC.as_ptr() as *const _);
+            let func_ptr = ffi::duk_get_pointer(ctx, -1) as *mut Callback;
+
+            //let inner = || (*func)(&rubtle, (), args);
+            let inner = move || (* func_ptr)(invocation);
+
+            let result = match catch_unwind(AssertUnwindSafe(inner)) {
+                Ok(result) => result,
+                Err(_) => {
+                    ffi::duk_fatal_raw(ctx, cstr!("panic occurred during script execution"));
+                    unreachable!();
+                },
+            };
+
+            match result {
+                Ok(value) => {
+                    rubtle.push_value(&value);
+                    1
+                },
+                Err(_) => {
+                    -1
+                },
+            }
+        }
+
+        unsafe extern "C" fn finalizer(ctx: *mut ffi::duk_context) -> ffi::duk_ret_t {
+            ffi::duk_require_stack(ctx, 1);
+
+            0
+        }
+
+        unsafe {
+            let cstr = CString::new(to_cesu8(name));
+
+            match cstr {
+                Ok(cval) => {
+                    ffi::duk_require_stack(self.ctx, 2);
+                    ffi::duk_push_c_function(self.ctx, Some(wrapper), -1); //< (DUK_VARARGS)
+                    ffi::duk_push_pointer(self.ctx, Box::into_raw(Box::new(func)) as *mut _);
+                    ffi::duk_push_c_function(self.ctx, Some(finalizer), 1);
+                    ffi::duk_set_finalizer(self.ctx, -2);
+                    ffi::duk_put_global_lstring(self.ctx,
+                        cval.as_ptr(), cval.as_bytes().len() as u64);
+                },
+                Err(_) => unimplemented!()
             }
         }
     }
