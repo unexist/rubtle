@@ -28,3 +28,13 @@ macro_rules! i8str {
 macro_rules! hidden_i8str {
     ($($b:expr),*) => (i8str!(-1, $($b as i8),*))
 }
+
+#[allow(unused_macros)]
+macro_rules! debug_stack {
+    ($ctx:expr) => (debug_stack($ctx, file!(), line!()))
+}
+
+#[allow(unused_macros)]
+macro_rules! debug_println {
+    ($($arg:tt)*) => (println!("{}@{}: {}", file!(), line!(), $($arg)*))
+}
