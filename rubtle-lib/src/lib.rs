@@ -16,6 +16,7 @@ extern crate rubtle_duktape as ffi;
 
 mod rubtle;
 mod value;
+mod object;
 mod invocation;
 mod error;
 mod types;
@@ -25,6 +26,7 @@ mod debug;
 
 pub use rubtle::Rubtle;
 pub use value::Value;
+pub use object::Object;
 pub use invocation::Invocation;
 pub use error::Error;
 pub use types::{Callback, Result};
