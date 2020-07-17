@@ -9,10 +9,8 @@
 /// See the file LICENSE for details.
 //
 
-use std::{fmt, result};
+use std::fmt;
 use std::error::Error as StdError;
-
-pub type Result<T> = result::Result<T, Error>;
 
 #[derive(Debug)]
 pub struct Error {
@@ -20,6 +18,7 @@ pub struct Error {
 }
 
 impl Error {
+    #[allow(dead_code)]
     fn new(details: &str) -> Error {
         Error {
             details: details.to_string()
