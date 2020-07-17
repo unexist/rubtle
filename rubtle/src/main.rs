@@ -8,7 +8,6 @@
 /// This program can be distributed under the terms of the GNU GPLv2.
 /// See the file LICENSE for details.
 ///
-
 extern crate rubtle_lib as rubtle;
 
 use rubtle::Rubtle;
@@ -23,7 +22,7 @@ fn main() {
 
         println!("{:?}", contents);
 
-        let rubtle = Rubtle::new();
+        let _rubtle = Rubtle::new();
     } else {
         println!("Usage: {}: <JSFile>", args[0]);
     }
