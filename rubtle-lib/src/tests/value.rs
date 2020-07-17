@@ -8,7 +8,6 @@
 /// This program can be distributed under the terms of the GNU GPLv2.
 /// See the file LICENSE for details.
 ///
-
 use crate::Value;
 
 #[test]
