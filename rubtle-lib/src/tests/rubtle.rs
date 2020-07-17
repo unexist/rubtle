@@ -8,7 +8,6 @@
 /// This program can be distributed under the terms of the GNU GPLv2.
 /// See the file LICENSE for details.
 ///
-
 use crate::{Rubtle, Value, Invocation, Result};
 
 ///
@@ -56,9 +55,11 @@ fn push_and_pop_string_value() {
 fn evil_eval_test() {
     let rubtle = Rubtle::new();
 
-    rubtle.eval(r#"
+    rubtle.eval(
+        r#"
         var rubtle = 'yeah';
-    "#);
+    "#,
+    );
 }
 
 ///
@@ -72,7 +73,6 @@ fn set_global_bool_value() {
 
     rubtle.set_global_value("rubtle", &rval);
 }
-
 
 #[test]
 fn set_global_number_value() {
@@ -94,9 +94,11 @@ fn set_global_string_value() {
 fn get_global_bool_value() {
     let rubtle = Rubtle::new();
 
-    rubtle.eval(r#"
+    rubtle.eval(
+        r#"
         var rubtle = true;
-    "#);
+    "#,
+    );
 
     let rval = rubtle.get_global_value("rubtle").unwrap();
     let rval2 = Value::from(true);
@@ -108,9 +110,11 @@ fn get_global_bool_value() {
 fn get_global_number_value() {
     let rubtle = Rubtle::new();
 
-    rubtle.eval(r#"
+    rubtle.eval(
+        r#"
         var rubtle = 4;
-    "#);
+    "#,
+    );
 
     let rval = rubtle.get_global_value("rubtle").unwrap();
     let rval2 = Value::from(4);
@@ -122,9 +126,11 @@ fn get_global_number_value() {
 fn get_global_string_value() {
     let rubtle = Rubtle::new();
 
-    rubtle.eval(r#"
+    rubtle.eval(
+        r#"
         var rubtle = 'test';
-    "#);
+    "#,
+    );
 
     let rval = rubtle.get_global_value("rubtle").unwrap();
     let rval2 = Value::from("test");
@@ -133,7 +139,6 @@ fn get_global_string_value() {
 }
 
 #[test]
-#[ignore]
 fn set_global_function() {
     let rubtle = Rubtle::new();
 
@@ -144,4 +149,25 @@ fn set_global_function() {
     };
 
     rubtle.set_global_function("square", square);
+}
+
+#[test]
+fn set_and_run_global_printer() {
+    let rubtle = Rubtle::new();
+
+    let printer = |inv: Invocation| -> Result<Value> {
+        let s = inv.args.first().unwrap();
+
+        println!("{:?}", s.as_string().unwrap());
+
+        Ok(Value::from(true))
+    };
+
+    rubtle.set_global_function("print", printer);
+
+    rubtle.eval(
+        r#"
+        print('Test');
+    "#,
+    );
 }
