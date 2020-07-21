@@ -8,7 +8,7 @@
 /// This program can be distributed under the terms of the GNU GPLv2.
 /// See the file LICENSE for details.
 ///
-use crate::{Rubtle, Value, Invocation, Result};
+use crate::{Invocation, Result, Rubtle, Value};
 
 ///
 /// Stack
@@ -137,6 +137,10 @@ fn get_global_string_value() {
 
     assert_eq!(rval, rval2);
 }
+
+///
+/// Global functions
+///
 
 #[test]
 fn set_global_function() {

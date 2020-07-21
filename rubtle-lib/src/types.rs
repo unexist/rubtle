@@ -1,4 +1,3 @@
-
 ///
 /// @package Rubtle-Lib
 ///
@@ -9,7 +8,6 @@
 /// This program can be distributed under the terms of the GNU GPLv2.
 /// See the file LICENSE for details.
 //
-
 use std::result;
 
 use crate::{Error, Invocation, Value};
