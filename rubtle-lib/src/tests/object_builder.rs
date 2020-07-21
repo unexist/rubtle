@@ -30,6 +30,17 @@ fn create_builder_with_ctor() {
 }
 
 #[test]
+fn create_builder_call_ctor() {
+    let mut builder: ObjectBuilder<UserData> = ObjectBuilder::new();
+
+    builder.set_constructor(|mut user_data| {
+        user_data.value = 1;
+    });
+
+    builder.call_constructor(UserData::default());
+}
+
+#[test]
 fn create_builder_with_method() {
     let mut builder: ObjectBuilder<UserData> = ObjectBuilder::new();
 

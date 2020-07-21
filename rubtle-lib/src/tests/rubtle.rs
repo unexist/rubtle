@@ -190,6 +190,35 @@ fn set_global_object_with_ctor() {
     let mut builder: ObjectBuilder<UserData> = ObjectBuilder::new();
 
     builder.set_constructor(|mut user_data| {
+        user_data.value = 1;
+    });
+
+    let rubtle = Rubtle::new();
+
+    rubtle.set_global_object("Counter", &builder);
+
+    rubtle.eval(
+        r#"
+        var counter = new Counter();
+    "#,
+    );
+}
+
+#[test]
+#[ignore]
+fn set_global_object_with_ctor_and_method() {
+    #[derive(Default)]
+    struct UserData {
+        value: i32,
+    };
+
+    let mut builder: ObjectBuilder<UserData> = ObjectBuilder::new();
+
+    builder.set_constructor(|mut user_data| {
+        user_data.value = 1;
+    });
+
+    builder.set_method("count", |mut user_data| {
         user_data.value += 1;
     });
 
@@ -200,6 +229,8 @@ fn set_global_object_with_ctor() {
     rubtle.eval(
         r#"
         var counter = new Counter();
+
+        counter.count();
     "#,
     );
 }

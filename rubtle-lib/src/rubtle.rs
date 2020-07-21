@@ -405,7 +405,6 @@ impl Rubtle {
             ffi::duk_push_this(ctx);
             ffi::duk_push_pointer(ctx, boxed_udata as *mut _);
             ffi::duk_put_prop_string(ctx, -2, UDATA.as_ptr() as *const _);
-            debug_stack!(ctx);
             ffi::duk_pop(ctx);
 
             0

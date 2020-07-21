@@ -17,11 +17,11 @@ pub struct ObjectBuilder<T> {
     pub methods: HashMap<&'static str, ObjectBuilderCall<T>>,
 }
 
-impl<T> ObjectBuilder<T> {
-    pub fn new() -> ObjectBuilder<T>
-    where
-        T: Default + 'static,
-    {
+impl<T> ObjectBuilder<T>
+where
+    T: Default + 'static,
+{
+    pub fn new() -> ObjectBuilder<T> {
         ObjectBuilder {
             constructor: None,
             methods: HashMap::new(),
@@ -33,6 +33,13 @@ impl<T> ObjectBuilder<T> {
         F: 'static + FnMut(T),
     {
         self.constructor = Some(Box::new(func) as ObjectBuilderCall<T>);
+    }
+
+    pub fn call_constructor(&mut self, user_data: T) {
+        match &mut self.constructor {
+            Some(ctor) => (*ctor)(user_data),
+            None => unimplemented!(),
+        }
     }
 
     pub fn set_method<F>(&mut self, name: &'static str, func: F)
