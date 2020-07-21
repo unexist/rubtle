@@ -13,15 +13,16 @@ use std::collections::HashMap;
 type ObjectBuilderCall<T> = Box<dyn FnMut(T)>;
 
 pub struct ObjectBuilder<T> {
-    pub user_data: Option<T>,
     pub constructor: Option<ObjectBuilderCall<T>>,
     pub methods: HashMap<&'static str, ObjectBuilderCall<T>>,
 }
 
 impl<T> ObjectBuilder<T> {
-    pub fn new() -> ObjectBuilder<T> {
+    pub fn new() -> ObjectBuilder<T>
+    where
+        T: Default + 'static,
+    {
         ObjectBuilder {
-            user_data: None,
             constructor: None,
             methods: HashMap::new(),
         }
@@ -34,14 +35,11 @@ impl<T> ObjectBuilder<T> {
         self.constructor = Some(Box::new(func) as ObjectBuilderCall<T>);
     }
 
-    pub fn set_user_data(&mut self, user_data: T) {
-        self.user_data = Some(user_data);
-    }
-
-    pub fn add_method<F>(&mut self, name: &'static str, func: F)
+    pub fn set_method<F>(&mut self, name: &'static str, func: F)
     where
         F: 'static + FnMut(T),
     {
-        self.methods.insert(name, Box::new(func) as ObjectBuilderCall<T>);
+        self.methods
+            .insert(name, Box::new(func) as ObjectBuilderCall<T>);
     }
 }

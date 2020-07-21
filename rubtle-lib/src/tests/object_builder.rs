@@ -10,48 +10,34 @@
 ///
 use crate::ObjectBuilder;
 
-#[test]
-fn create_object() {
-    let _builder: ObjectBuilder<Userdata> = ObjectBuilder::new();
-}
-
-struct Userdata {
+#[derive(Default)]
+struct UserData {
     value: i32,
 }
 
 #[test]
-fn create_builder_with_userdata() {
-    let mut builder: ObjectBuilder<Userdata> = ObjectBuilder::new();
-
-    let user_data = Userdata { value: 4 };
-
-    builder.set_user_data(user_data);
+fn create_object() {
+    let _builder: ObjectBuilder<UserData> = ObjectBuilder::new();
 }
 
 #[test]
 fn create_builder_with_ctor() {
-    let mut builder: ObjectBuilder<Userdata> = ObjectBuilder::new();
+    let mut builder: ObjectBuilder<UserData> = ObjectBuilder::new();
 
-    let user_data = Userdata { value: 4 };
-
-    builder.set_user_data(user_data);
     builder.set_constructor(|mut user_data| {
-        user_data.value += 1;
+        user_data.value = 1;
     });
 }
 
 #[test]
 fn create_builder_with_method() {
-    let mut builder: ObjectBuilder<Userdata> = ObjectBuilder::new();
+    let mut builder: ObjectBuilder<UserData> = ObjectBuilder::new();
 
-    let user_data = Userdata { value: 4 };
-
-    builder.set_user_data(user_data);
     builder.set_constructor(|mut user_data| {
         user_data.value = 1;
     });
 
-    builder.add_method("increment", |mut user_data| {
+    builder.set_method("increment", |mut user_data| {
         user_data.value += 1;
     });
 }

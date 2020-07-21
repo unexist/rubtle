@@ -15,10 +15,12 @@ use std::{process, ptr, slice};
 
 use cesu8::{from_cesu8, to_cesu8};
 
+use crate::debug::*;
 use crate::types::Callback;
-use crate::{Invocation, Result, Value};
+use crate::{Invocation, ObjectBuilder, Result, Value};
 
 const FUNC: [i8; 6] = hidden_i8str!('f', 'u', 'n', 'c');
+const UDATA: [i8; 7] = hidden_i8str!('u', 'd', 'a', 't', 'a');
 
 pub struct Rubtle {
     /// Duktape context
@@ -373,6 +375,55 @@ impl Rubtle {
                     ffi::duk_set_finalizer(self.ctx, -2);
 
                     /* Finally store as global function */
+                    ffi::duk_put_global_lstring(
+                        self.ctx,
+                        cval.as_ptr(),
+                        cval.as_bytes().len() as u64,
+                    );
+                }
+                Err(_) => unimplemented!(),
+            }
+        }
+    }
+
+    pub fn set_global_object<T>(&self, name: &str, builder: &ObjectBuilder<T>)
+    where
+        T: Default + 'static,
+    {
+        unsafe extern "C" fn ctor_wrapper<T>(ctx: *mut ffi::duk_context) -> ffi::duk_ret_t
+        where
+            T: Default + 'static,
+        {
+            if 0 == ffi::duk_is_constructor_call(ctx) {
+                return -1;
+            }
+
+            let boxed_udata = Box::into_raw(Box::new(T::default()));
+
+            assert!(!boxed_udata.is_null(), "Null user data pointer");
+
+            ffi::duk_push_this(ctx);
+            ffi::duk_push_pointer(ctx, boxed_udata as *mut _);
+            ffi::duk_put_prop_string(ctx, -2, UDATA.as_ptr() as *const _);
+            debug_stack!(ctx);
+            ffi::duk_pop(ctx);
+
+            0
+        }
+
+        unsafe {
+            let cstr = CString::new(to_cesu8(name));
+
+            match cstr {
+                Ok(cval) => {
+                    ffi::duk_push_c_function(self.ctx, Some(ctor_wrapper::<T>), -1);
+                    ffi::duk_push_object(self.ctx);
+
+                    //ffi::duk_push_c_function(ctx, tjs_wm_prototype_tostring, 0);
+                    //ffi::duk_put_prop_string(ctx, -2, "toString");
+
+                    ffi::duk_put_prop_string(self.ctx, -2, cstr!("prototype"));
+
                     ffi::duk_put_global_lstring(
                         self.ctx,
                         cval.as_ptr(),
