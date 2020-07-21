@@ -97,6 +97,91 @@ impl Rubtle {
     }
 
     ///
+    /// Pop most recent value from duktape stack
+    ///
+    /// # Returns
+    ///
+    /// Any value on top of the stack as `Value`
+    ///
+    /// # Example
+    ///
+    ///     use rubtle_lib::{Rubtle, Value};
+    ///
+    ///     let rubtle = Rubtle::new();
+    ///     let rval = Value::from(4);
+    ///
+    ///     rubtle.push_value(&rval);
+    ///
+    ///     let rval2 = rubtle.pop_value().unwrap();
+    ///
+
+    pub fn pop_value(&self) -> Option<Value> {
+        self.pop_value_at(-1)
+    }
+
+    ///
+    /// Pop value on given index from duktape stack
+    ///
+    /// # Arguments
+    ///
+    /// * `idx` - Stack index; -1 for top
+    ///
+    /// # Returns
+    ///
+    /// Any value on top of the stack as `Option<Value>`
+    ///
+    /// # Example
+    ///
+    ///     use rubtle_lib::{Rubtle, Value};
+    ///
+    ///     let rubtle = Rubtle::new();
+    ///     let rval = Value::from(4);
+    ///
+    ///     rubtle.push_value(&rval);
+    ///
+    ///     let rval2 = rubtle.pop_value_at(-1).unwrap();
+    //
+
+    pub fn pop_value_at(&self, idx: ffi::duk_idx_t) -> Option<Value> {
+        unsafe {
+            match ffi::duk_get_type(self.ctx, idx) as u32 {
+                ffi::DUK_TYPE_BOOLEAN => {
+                    let dval = ffi::duk_get_boolean(self.ctx, idx);
+
+                    ffi::duk_remove(self.ctx, idx);
+
+                    Some(Value::Boolean(0 != dval))
+                }
+
+                ffi::DUK_TYPE_NUMBER => {
+                    let dval = ffi::duk_get_number(self.ctx, idx);
+
+                    ffi::duk_remove(self.ctx, idx);
+
+                    Some(Value::Number(dval))
+                }
+
+                ffi::DUK_TYPE_STRING => {
+                    let mut len = 0;
+
+                    let dval = ffi::duk_get_lstring(self.ctx, idx, &mut len);
+
+                    assert!(!dval.is_null(), "string is null");
+
+                    let bytes = slice::from_raw_parts(dval as *const u8, len as usize);
+
+                    match from_cesu8(bytes) {
+                        Ok(string) => Some(Value::Str(string.into_owned())),
+                        Err(_) => None,
+                    }
+                }
+
+                _ => None,
+            }
+        }
+    }
+
+    ///
     /// Set value to context and assign a global reachable name
     ///
     /// # Arguments
@@ -295,91 +380,6 @@ impl Rubtle {
                     );
                 }
                 Err(_) => unimplemented!(),
-            }
-        }
-    }
-
-    ///
-    /// Pop most recent value from duktape stack
-    ///
-    /// # Returns
-    ///
-    /// Any value on top of the stack as `Value`
-    ///
-    /// # Example
-    ///
-    ///     use rubtle_lib::{Rubtle, Value};
-    ///
-    ///     let rubtle = Rubtle::new();
-    ///     let rval = Value::from(4);
-    ///
-    ///     rubtle.push_value(&rval);
-    ///
-    ///     let rval2 = rubtle.pop_value().unwrap();
-    ///
-
-    pub fn pop_value(&self) -> Option<Value> {
-        self.pop_value_at(-1)
-    }
-
-    ///
-    /// Pop value on given index from duktape stack
-    ///
-    /// # Arguments
-    ///
-    /// * `idx` - Stack index; -1 for top
-    ///
-    /// # Returns
-    ///
-    /// Any value on top of the stack as `Option<Value>`
-    ///
-    /// # Example
-    ///
-    ///     use rubtle_lib::{Rubtle, Value};
-    ///
-    ///     let rubtle = Rubtle::new();
-    ///     let rval = Value::from(4);
-    ///
-    ///     rubtle.push_value(&rval);
-    ///
-    ///     let rval2 = rubtle.pop_value_at(-1).unwrap();
-    //
-
-    pub fn pop_value_at(&self, idx: ffi::duk_idx_t) -> Option<Value> {
-        unsafe {
-            match ffi::duk_get_type(self.ctx, idx) as u32 {
-                ffi::DUK_TYPE_BOOLEAN => {
-                    let dval = ffi::duk_get_boolean(self.ctx, idx);
-
-                    ffi::duk_remove(self.ctx, idx);
-
-                    Some(Value::Boolean(0 != dval))
-                }
-
-                ffi::DUK_TYPE_NUMBER => {
-                    let dval = ffi::duk_get_number(self.ctx, idx);
-
-                    ffi::duk_remove(self.ctx, idx);
-
-                    Some(Value::Number(dval))
-                }
-
-                ffi::DUK_TYPE_STRING => {
-                    let mut len = 0;
-
-                    let dval = ffi::duk_get_lstring(self.ctx, idx, &mut len);
-
-                    assert!(!dval.is_null(), "string is null");
-
-                    let bytes = slice::from_raw_parts(dval as *const u8, len as usize);
-
-                    match from_cesu8(bytes) {
-                        Ok(string) => Some(Value::Str(string.into_owned())),
-                        Err(_) => None,
-                    }
-                }
-
-                _ => None,
             }
         }
     }

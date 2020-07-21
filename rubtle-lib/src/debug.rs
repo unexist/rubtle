@@ -12,6 +12,7 @@ use std::slice;
 
 use cesu8::from_cesu8;
 
+#[allow(dead_code)]
 pub fn debug_stack(ctx: *mut ffi::duk_context, filename: &str, lineno: u32) {
     unsafe {
         ffi::duk_push_context_dump(ctx);
