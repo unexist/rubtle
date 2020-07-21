@@ -8,7 +8,7 @@
 /// This program can be distributed under the terms of the GNU GPLv2.
 /// See the file LICENSE for details.
 ///
-use crate::{Invocation, Result, Rubtle, Value};
+use crate::{Invocation, ObjectBuilder, Result, Rubtle, Value};
 
 ///
 /// Stack
@@ -172,6 +172,34 @@ fn set_and_run_global_printer() {
     rubtle.eval(
         r#"
         print('Test');
+    "#,
+    );
+}
+
+///
+/// Global objects
+///
+
+#[test]
+fn set_global_object_with_ctor() {
+    #[derive(Default)]
+    struct UserData {
+        value: i32,
+    };
+
+    let mut builder: ObjectBuilder<UserData> = ObjectBuilder::new();
+
+    builder.set_constructor(|mut user_data| {
+        user_data.value += 1;
+    });
+
+    let rubtle = Rubtle::new();
+
+    rubtle.set_global_object("Counter", &builder);
+
+    rubtle.eval(
+        r#"
+        var counter = new Counter();
     "#,
     );
 }
