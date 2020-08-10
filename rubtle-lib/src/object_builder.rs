@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 ///
 /// @package Rubtle-Lib
 ///
@@ -9,12 +8,30 @@ use std::collections::HashMap;
 /// This program can be distributed under the terms of the GNU GPLv2.
 /// See the file LICENSE for details.
 //
+use std::collections::HashMap;
 
-type ObjectBuilderCall<T> = Box<dyn FnMut(T)>;
+use crate::types::ObjectBuilderCall;
+
+#[derive(Default)]
+pub struct Object<T> {
+    pub methods: HashMap<&'static str, ObjectBuilderCall<T>>,
+}
+
+impl<T> Object<T>
+where
+    T: Default + 'static,
+{
+    pub fn has_method(&self, meth_name: &str) -> bool {
+        !self.methods.is_empty() && self.methods.contains_key(meth_name)
+    }
+
+    pub fn get_method(&mut self, meth_name: &str) -> Option<ObjectBuilderCall<T>> {
+        self.methods.remove(meth_name)
+    }
+}
 
 pub struct ObjectBuilder<T> {
-    pub constructor: Option<ObjectBuilderCall<T>>,
-    pub methods: HashMap<&'static str, ObjectBuilderCall<T>>,
+    methods: HashMap<&'static str, ObjectBuilderCall<T>>,
 }
 
 impl<T> ObjectBuilder<T>
@@ -22,31 +39,38 @@ where
     T: Default + 'static,
 {
     pub fn new() -> ObjectBuilder<T> {
-        ObjectBuilder {
-            constructor: None,
+        ObjectBuilder::<T> {
             methods: HashMap::new(),
         }
     }
 
-    pub fn set_constructor<F>(&mut self, func: F)
+    pub fn with_constructor<'a, F>(&'a mut self, func: F) -> &'a mut ObjectBuilder<T>
     where
-        F: 'static + FnMut(T),
-    {
-        self.constructor = Some(Box::new(func) as ObjectBuilderCall<T>);
-    }
-
-    pub fn call_constructor(&mut self, user_data: T) {
-        match &mut self.constructor {
-            Some(ctor) => (*ctor)(user_data),
-            None => unimplemented!(),
-        }
-    }
-
-    pub fn set_method<F>(&mut self, name: &'static str, func: F)
-    where
-        F: 'static + FnMut(T),
+        F: 'static + FnMut(&mut T),
     {
         self.methods
+            .insert("ctor", Box::new(func) as ObjectBuilderCall<T>);
+
+        self
+    }
+
+    pub fn with_method<'a, F>(&'a mut self, name: &'static str, func: F) -> &'a mut ObjectBuilder<T>
+    where
+        F: 'static + FnMut(&mut T),
+    {
+        assert!("ctor" != name, "use with_constructor");
+
+        self.methods
             .insert(name, Box::new(func) as ObjectBuilderCall<T>);
+
+        self
+    }
+
+    pub fn build(&mut self) -> Object<T> {
+        let mut object = Object::<T>::default();
+
+        std::mem::swap(&mut self.methods, &mut object.methods);
+
+        object
     }
 }

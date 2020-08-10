@@ -15,3 +15,5 @@ use crate::{Error, Invocation, Value};
 pub type Result<T> = result::Result<T, Error>;
 
 pub type Callback = Box<dyn Fn(Invocation) -> Result<Value>>;
+
+pub type ObjectBuilderCall<T> = Box<dyn FnMut(&mut T)>;
