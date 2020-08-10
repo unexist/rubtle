@@ -186,7 +186,6 @@ fn set_global_object_with_ctor() {
     let mut object = ObjectBuilder::<UserData>::new()
         .with_constructor(|mut user_data| {
             user_data.value = 1;
-            println!("Called ctor");
         })
         .build();
 
