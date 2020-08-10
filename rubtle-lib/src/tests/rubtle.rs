@@ -146,28 +146,24 @@ fn get_global_string_value() {
 fn set_global_function() {
     let rubtle = Rubtle::new();
 
-    let square = |inv: Invocation| -> Result<Value> {
+    rubtle.set_global_function("square", |inv: Invocation| -> Result<Value> {
         let i = inv.args.first().unwrap();
 
         Ok(Value::from(i.as_number().unwrap() * i.as_number().unwrap()))
-    };
-
-    rubtle.set_global_function("square", square);
+    });
 }
 
 #[test]
 fn set_and_run_global_printer() {
     let rubtle = Rubtle::new();
 
-    let printer = |inv: Invocation| -> Result<Value> {
+    rubtle.set_global_function("print", |inv: Invocation| -> Result<Value> {
         let s = inv.args.first().unwrap();
 
         println!("{:?}", s.as_string().unwrap());
 
         Ok(Value::from(true))
-    };
-
-    rubtle.set_global_function("print", printer);
+    });
 
     rubtle.eval(
         r#"
@@ -187,15 +183,16 @@ fn set_global_object_with_ctor() {
         value: i32,
     };
 
-    let mut builder: ObjectBuilder<UserData> = ObjectBuilder::new();
-
-    builder.set_constructor(|mut user_data| {
-        user_data.value = 1;
-    });
+    let mut object = ObjectBuilder::<UserData>::new()
+        .with_constructor(|mut user_data| {
+            user_data.value = 1;
+            println!("Called ctor");
+        })
+        .build();
 
     let rubtle = Rubtle::new();
 
-    rubtle.set_global_object("Counter", &builder);
+    rubtle.set_global_object("Counter", &mut object);
 
     rubtle.eval(
         r#"
@@ -212,19 +209,18 @@ fn set_global_object_with_ctor_and_method() {
         value: i32,
     };
 
-    let mut builder: ObjectBuilder<UserData> = ObjectBuilder::new();
-
-    builder.set_constructor(|mut user_data| {
-        user_data.value = 1;
-    });
-
-    builder.set_method("count", |mut user_data| {
-        user_data.value += 1;
-    });
+    let mut object = ObjectBuilder::<UserData>::new()
+        .with_constructor(|mut user_data| {
+            user_data.value = 1;
+        })
+        .with_method("count", |mut user_data| {
+            user_data.value += 1;
+        })
+        .build();
 
     let rubtle = Rubtle::new();
 
-    rubtle.set_global_object("Counter", &builder);
+    rubtle.set_global_object("Counter", &mut object);
 
     rubtle.eval(
         r#"

@@ -1,6 +1,3 @@
-use std::ffi::{CStr, CString};
-use std::os::raw::{c_char, c_void};
-use std::panic::{catch_unwind, AssertUnwindSafe};
 ///
 /// @package Rubtle-Lib
 ///
@@ -13,13 +10,22 @@ use std::panic::{catch_unwind, AssertUnwindSafe};
 ///
 use std::{process, ptr, slice};
 
+use std::ffi::{CStr, CString};
+use std::mem::{take, transmute};
+use std::os::raw::{c_char, c_void};
+use std::panic::{catch_unwind, AssertUnwindSafe};
+
 use cesu8::{from_cesu8, to_cesu8};
 
+use crate::object_builder::Object;
+use crate::types::{Callback, ObjectBuilderCall};
+use crate::{Invocation, Result, Value};
+
+#[allow(unused_imports)]
 use crate::debug::*;
-use crate::types::Callback;
-use crate::{Invocation, ObjectBuilder, Result, Value};
 
 const FUNC: [i8; 6] = hidden_i8str!('f', 'u', 'n', 'c');
+const CTOR: [i8; 6] = hidden_i8str!('c', 't', 'o', 'r');
 const UDATA: [i8; 7] = hidden_i8str!('u', 'd', 'a', 't', 'a');
 
 pub struct Rubtle {
@@ -312,10 +318,9 @@ impl Rubtle {
                 args: args,
             };
 
-            /* Fetch boxed pointer from duktape */
+            /* Fetch pointer from duktape */
             ffi::duk_push_current_function(ctx);
             ffi::duk_get_prop_string(ctx, -1, FUNC.as_ptr() as *const _);
-
             let func_ptr = ffi::duk_get_pointer(ctx, -1) as *mut Callback;
             ffi::duk_pop_n(ctx, 2);
 
@@ -386,7 +391,7 @@ impl Rubtle {
         }
     }
 
-    pub fn set_global_object<T>(&self, name: &str, builder: &ObjectBuilder<T>)
+    pub fn set_global_object<T>(&self, name: &str, object: &mut Object<T>)
     where
         T: Default + 'static,
     {
@@ -394,17 +399,46 @@ impl Rubtle {
         where
             T: Default + 'static,
         {
+            /* Verify this is a constrcutor call */
             if 0 == ffi::duk_is_constructor_call(ctx) {
                 return -1;
             }
 
-            let boxed_udata = Box::into_raw(Box::new(T::default()));
+            /* Create user data */
+            let mut user_data = T::default();
+
+            /* Fetch pointer from duktape */
+            ffi::duk_push_current_function(ctx);
+            ffi::duk_get_prop_string(ctx, -1, CTOR.as_ptr() as *const _);
+            let func_ptr = ffi::duk_get_pointer(ctx, -1) as *mut ObjectBuilderCall<T>;
+            ffi::duk_pop_n(ctx, 2);
+
+
+            //let mut fat_ptr: &mut ObjectBuilderCall<T> = std::mem::transmute(func_ptr);
+
+            //fat_ptr(&mut user_data);
+
+            /* Wrap function and finally call it */
+            let mut wrapped_func = || (*func_ptr)(&mut user_data);
+
+            let result = match catch_unwind(AssertUnwindSafe(wrapped_func)) {
+                Ok(result) => result,
+                Err(_) => {
+                    ffi::duk_fatal_raw(ctx, cstr!("fatal error on func call"));
+                    unreachable!();
+                }
+            };
+
+            let boxed_udata = Box::into_raw(Box::new(user_data));
 
             assert!(!boxed_udata.is_null(), "Null user data pointer");
 
-            ffi::duk_push_this(ctx);
+            ffi::duk_push_current_function(ctx);
+
+            /* Store user data */
             ffi::duk_push_pointer(ctx, boxed_udata as *mut _);
             ffi::duk_put_prop_string(ctx, -2, UDATA.as_ptr() as *const _);
+
             ffi::duk_pop(ctx);
 
             0
@@ -416,13 +450,23 @@ impl Rubtle {
             match cstr {
                 Ok(cval) => {
                     ffi::duk_push_c_function(self.ctx, Some(ctor_wrapper::<T>), -1);
+
+                    /* Store wrapper */
+                    if object.has_method("ctor") {
+                        let ctor = object.get_method("ctor").unwrap();
+
+                        let boxed_func = Box::into_raw(Box::new(ctor));
+
+                        ffi::duk_push_pointer(self.ctx, boxed_func as *mut _);
+                        ffi::duk_put_prop_string(self.ctx, -2, CTOR.as_ptr() as *const _);
+                    }
+
                     ffi::duk_push_object(self.ctx);
 
                     //ffi::duk_push_c_function(ctx, tjs_wm_prototype_tostring, 0);
                     //ffi::duk_put_prop_string(ctx, -2, "toString");
 
                     ffi::duk_put_prop_string(self.ctx, -2, cstr!("prototype"));
-
                     ffi::duk_put_global_lstring(
                         self.ctx,
                         cval.as_ptr(),
