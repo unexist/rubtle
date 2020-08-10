@@ -8,7 +8,6 @@
 /// This program can be distributed under the terms of the GNU GPLv2.
 /// See the file LICENSE for details.
 ///
-
 extern crate bindgen;
 extern crate cc;
 
@@ -49,7 +48,8 @@ fn main() {
     /* Build duktape */
     let mut builder = cc::Build::new();
 
-    builder.include("duktape")
+    builder
+        .include("duktape")
         .flag("-std=c99")
         .file("duktape/duktape.c");
 
