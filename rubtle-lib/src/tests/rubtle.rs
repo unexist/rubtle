@@ -201,8 +201,7 @@ fn set_global_object_with_ctor() {
 }
 
 #[test]
-#[ignore]
-fn set_global_object_with_ctor_and_method() {
+fn set_global_object_with_ctor_and_methods() {
     #[derive(Default)]
     struct UserData {
         value: i32,
@@ -215,6 +214,9 @@ fn set_global_object_with_ctor_and_method() {
         .with_method("count", |mut user_data| {
             user_data.value += 1;
         })
+        .with_method("print", |user_data| {
+            println!("Value={}", user_data.value)
+        })
         .build();
 
     let rubtle = Rubtle::new();
@@ -226,6 +228,9 @@ fn set_global_object_with_ctor_and_method() {
         var counter = new Counter();
 
         counter.count();
+        counter.count()
+
+        counter.print();
     "#,
     );
 }

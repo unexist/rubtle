@@ -31,7 +31,28 @@ fn create_object_builder_object_has_method() {
 fn create_object_builder_object_get_method() {
     let mut object = ObjectBuilder::<UserData>::new().build();
 
-    assert!(object.get_method("test").is_none());
+    assert!(object.take_method("test").is_none());
+}
+
+#[test]
+fn create_object_builder_object_iter() {
+    let object = ObjectBuilder::<UserData>::new()
+        .with_method("print1", |user_data| {
+            println!("{}", user_data.value);
+        })
+        .with_method("print2", |user_data| {
+            println!("{}", user_data.value);
+        })
+        .build();
+
+    let mut i = 0;
+
+    for (name, _meth) in object {
+        i += 1;
+        println!("{}", name);
+    }
+
+    assert_eq!(i, 2);
 }
 
 #[test]

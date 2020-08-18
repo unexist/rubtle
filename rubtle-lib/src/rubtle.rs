@@ -11,7 +11,6 @@
 use std::{process, ptr, slice};
 
 use std::ffi::{CStr, CString};
-use std::mem::{take, transmute};
 use std::os::raw::{c_char, c_void};
 use std::panic::{catch_unwind, AssertUnwindSafe};
 
@@ -26,6 +25,7 @@ use crate::debug::*;
 
 const FUNC: [i8; 6] = hidden_i8str!('f', 'u', 'n', 'c');
 const CTOR: [i8; 6] = hidden_i8str!('c', 't', 'o', 'r');
+const METH: [i8; 6] = hidden_i8str!('m', 'e', 't', 'h');
 const UDATA: [i8; 7] = hidden_i8str!('u', 'd', 'a', 't', 'a');
 
 pub struct Rubtle {
@@ -413,18 +413,15 @@ impl Rubtle {
             let func_ptr = ffi::duk_get_pointer(ctx, -1) as *mut ObjectBuilderCall<T>;
             ffi::duk_pop_n(ctx, 2);
 
-
-            //let mut fat_ptr: &mut ObjectBuilderCall<T> = std::mem::transmute(func_ptr);
-
-            //fat_ptr(&mut user_data);
+            assert!(!func_ptr.is_null(), "Null function pointer");
 
             /* Wrap function and finally call it */
-            let mut wrapped_func = || (*func_ptr)(&mut user_data);
+            let wrapped_func = || (*func_ptr)(&mut user_data);
 
-            let result = match catch_unwind(AssertUnwindSafe(wrapped_func)) {
+            let _result = match catch_unwind(AssertUnwindSafe(wrapped_func)) {
                 Ok(result) => result,
                 Err(_) => {
-                    ffi::duk_fatal_raw(ctx, cstr!("fatal error on func call"));
+                    ffi::duk_fatal_raw(ctx, cstr!("Fatal error on func call"));
                     unreachable!();
                 }
             };
@@ -433,13 +430,45 @@ impl Rubtle {
 
             assert!(!boxed_udata.is_null(), "Null user data pointer");
 
-            ffi::duk_push_current_function(ctx);
-
             /* Store user data */
+            ffi::duk_push_this(ctx);
             ffi::duk_push_pointer(ctx, boxed_udata as *mut _);
             ffi::duk_put_prop_string(ctx, -2, UDATA.as_ptr() as *const _);
 
             ffi::duk_pop(ctx);
+
+            0
+        }
+
+        unsafe extern "C" fn meth_wrapper<T>(ctx: *mut ffi::duk_context) -> ffi::duk_ret_t
+        where
+            T: Default + 'static,
+        {
+            /* Fetch pointer from duktape */
+            ffi::duk_push_current_function(ctx);
+            ffi::duk_get_prop_string(ctx, -1, METH.as_ptr() as *const _);
+            let func_ptr = ffi::duk_get_pointer(ctx, -1) as *mut ObjectBuilderCall<T>;
+            ffi::duk_pop_n(ctx, 2);
+
+            assert!(!func_ptr.is_null(), "Null function pointer");
+
+            /* Fetch user data from duktape */
+            ffi::duk_push_this(ctx);
+            ffi::duk_get_prop_string(ctx, -1, UDATA.as_ptr() as *const _);
+            let udata_ptr = ffi::duk_get_pointer(ctx, -1) as *mut T;
+            ffi::duk_pop_n(ctx, 2);
+
+            assert!(!udata_ptr.is_null(), "Null user data pointer");
+
+            /* Wrap function and finally call it */
+            let wrapped_func = || (*func_ptr)(&mut *udata_ptr);
+            let _result = match catch_unwind(AssertUnwindSafe(wrapped_func)) {
+                Ok(result) => result,
+                Err(_) => {
+                    ffi::duk_fatal_raw(ctx, cstr!("Fatal error on func call"));
+                    unreachable!();
+                }
+            };
 
             0
         }
@@ -451,10 +480,9 @@ impl Rubtle {
                 Ok(cval) => {
                     ffi::duk_push_c_function(self.ctx, Some(ctor_wrapper::<T>), -1);
 
-                    /* Store wrapper */
+                    /* Store ctor wrapper */
                     if object.has_method("ctor") {
-                        let ctor = object.get_method("ctor").unwrap();
-
+                        let ctor = object.take_method("ctor").unwrap();
                         let boxed_func = Box::into_raw(Box::new(ctor));
 
                         ffi::duk_push_pointer(self.ctx, boxed_func as *mut _);
@@ -463,8 +491,29 @@ impl Rubtle {
 
                     ffi::duk_push_object(self.ctx);
 
-                    //ffi::duk_push_c_function(ctx, tjs_wm_prototype_tostring, 0);
-                    //ffi::duk_put_prop_string(ctx, -2, "toString");
+                    /* Store method wrapper */
+                    for (name, meth) in object {
+                        let cstr = CString::new(to_cesu8(name));
+
+                        match cstr {
+                            Ok(cval) => {
+                                let boxed_func = Box::into_raw(Box::new(meth));
+
+                                ffi::duk_push_c_function(self.ctx, Some(meth_wrapper::<T>), -1); //< (DUK_VARARGS)
+
+                                ffi::duk_push_pointer(self.ctx, boxed_func as *mut _);
+                                ffi::duk_put_prop_string(self.ctx, -2, METH.as_ptr() as *const _);
+
+                                ffi::duk_put_prop_lstring(
+                                    self.ctx,
+                                    -2,
+                                    cval.as_ptr(),
+                                    cval.as_bytes().len() as u64,
+                                );
+                            },
+                            Err(_) => unimplemented!(),
+                        }
+                    }
 
                     ffi::duk_put_prop_string(self.ctx, -2, cstr!("prototype"));
                     ffi::duk_put_global_lstring(
@@ -472,7 +521,7 @@ impl Rubtle {
                         cval.as_ptr(),
                         cval.as_bytes().len() as u64,
                     );
-                }
+                },
                 Err(_) => unimplemented!(),
             }
         }
