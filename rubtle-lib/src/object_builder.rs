@@ -25,8 +25,19 @@ where
         !self.methods.is_empty() && self.methods.contains_key(meth_name)
     }
 
-    pub fn get_method(&mut self, meth_name: &str) -> Option<ObjectBuilderCall<T>> {
+    pub fn take_method(&mut self, meth_name: &str) -> Option<ObjectBuilderCall<T>> {
         self.methods.remove(meth_name)
+    }
+}
+
+impl<T> Iterator for Object<T> {
+    type Item = (&'static str, ObjectBuilderCall<T>);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        match self.methods.keys().last() {
+            Some(&key) => Some((key, self.methods.remove(key).unwrap())),
+            None => None,
+        }
     }
 }
 
