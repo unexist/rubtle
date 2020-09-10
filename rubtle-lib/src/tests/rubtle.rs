@@ -214,9 +214,7 @@ fn set_global_object_with_ctor_and_methods() {
         .with_method("count", |mut user_data| {
             user_data.value += 1;
         })
-        .with_method("print", |user_data| {
-            println!("Value={}", user_data.value)
-        })
+        .with_method("print", |user_data| println!("Value={}", user_data.value))
         .build();
 
     let rubtle = Rubtle::new();

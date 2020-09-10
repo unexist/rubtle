@@ -1,3 +1,4 @@
+use std::error::Error as StdError;
 ///
 /// @package Rubtle-Lib
 ///
@@ -8,9 +9,7 @@
 /// This program can be distributed under the terms of the GNU GPLv2.
 /// See the file LICENSE for details.
 //
-
 use std::fmt;
-use std::error::Error as StdError;
 
 #[derive(Debug)]
 pub struct Error {
@@ -21,7 +20,7 @@ impl Error {
     #[allow(dead_code)]
     fn new(details: &str) -> Error {
         Error {
-            details: details.to_string()
+            details: details.to_string(),
         }
     }
 }
