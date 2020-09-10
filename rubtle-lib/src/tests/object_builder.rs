@@ -10,7 +10,7 @@
 ///
 use crate::ObjectBuilder;
 
-#[derive(Default, Copy, Clone)]
+#[derive(Default)]
 struct UserData {
     value: i32,
 }

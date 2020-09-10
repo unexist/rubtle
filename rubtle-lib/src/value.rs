@@ -8,18 +8,16 @@
 /// This program can be distributed under the terms of the GNU GPLv2.
 /// See the file LICENSE for details.
 ///
-
 use std::convert::From;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Value {
     Boolean(bool),
     Number(f64),
-    Str(String)
+    Str(String),
 }
 
 impl Value {
-
     ///
     /// Check whether value is a boolean
     ///
@@ -158,7 +156,7 @@ macro_rules! convert_num_type {
                 Value::Number(src as f64)
             }
         }
-    }
+    };
 }
 
 convert_num_type!(i32);

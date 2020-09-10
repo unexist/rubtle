@@ -288,7 +288,7 @@ impl Rubtle {
     ///         Ok(Value::from(true))
     ///     };
     ///
-    ///     rubtle.set_global_function("print", printer)
+    ///     rubtle.set_global_function("print", printer);
     ///
 
     pub fn set_global_function<F>(&self, name: &str, func: F)
@@ -390,6 +390,36 @@ impl Rubtle {
             }
         }
     }
+
+    ///
+    /// Create a global object for JS
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - Name of the global
+    /// * `object`- Object from ObjectBuilder
+    ///
+    /// # Example
+    ///
+    ///     use rubtle_lib::{Rubtle, ObjectBuilder};
+    ///
+    ///     let rubtle = Rubtle::new();
+    ///
+    ///     #[derive(Default)]
+    ///     struct UserData {
+    ///         value: i32,
+    ///     };
+    ///
+    ///     let mut object = ObjectBuilder::<UserData>::new()
+    ///         .with_constructor(|mut user_data| {
+    ///             user_data.value = 0;
+    ///          })
+    ///         .build();
+    ///
+    ///     let rubtle = Rubtle::new();
+    ///
+    ///     rubtle.set_global_object("Printer", &mut object);
+    ///
 
     pub fn set_global_object<T>(&self, name: &str, object: &mut Object<T>)
     where
@@ -510,7 +540,7 @@ impl Rubtle {
                                     cval.as_ptr(),
                                     cval.as_bytes().len() as u64,
                                 );
-                            },
+                            }
                             Err(_) => unimplemented!(),
                         }
                     }
@@ -521,7 +551,7 @@ impl Rubtle {
                         cval.as_ptr(),
                         cval.as_bytes().len() as u64,
                     );
-                },
+                }
                 Err(_) => unimplemented!(),
             }
         }
