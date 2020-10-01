@@ -1,4 +1,3 @@
-use std::error::Error as StdError;
 ///
 /// @package Rubtle-Lib
 ///
@@ -10,6 +9,7 @@ use std::error::Error as StdError;
 /// See the file LICENSE for details.
 //
 use std::fmt;
+use std::error::Error as StdError;
 
 #[derive(Debug)]
 pub struct Error {

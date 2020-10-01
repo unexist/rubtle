@@ -184,8 +184,10 @@ fn set_global_object_with_ctor() {
     };
 
     let mut object = ObjectBuilder::<UserData>::new()
-        .with_constructor(|mut user_data| {
+        .with_constructor(|mut user_data| -> Result<Value> {
             user_data.value = 1;
+
+            Ok(Value::from(user_data.value))
         })
         .build();
 
@@ -208,13 +210,21 @@ fn set_global_object_with_ctor_and_methods() {
     };
 
     let mut object = ObjectBuilder::<UserData>::new()
-        .with_constructor(|mut user_data| {
+        .with_constructor(|mut user_data| -> Result<Value> {
             user_data.value = 1;
+
+            Ok(Value::from(user_data.value))
         })
-        .with_method("count", |mut user_data| {
+        .with_method("count", |mut user_data| -> Result<Value> {
             user_data.value += 1;
+
+            Ok(Value::from(user_data.value))
         })
-        .with_method("print", |user_data| println!("Value={}", user_data.value))
+        .with_method("print", |user_data| -> Result<Value> {
+            println!("Value={}", user_data.value);
+
+            Ok(Value::from(user_data.value))
+        })
         .build();
 
     let rubtle = Rubtle::new();
@@ -229,6 +239,39 @@ fn set_global_object_with_ctor_and_methods() {
         counter.count()
 
         counter.print();
+    "#,
+    );
+}
+
+#[test]
+fn set_global_object_with_ctor_and_method_with_return_value() {
+    #[derive(Default)]
+    struct UserData {
+        value: i32,
+    };
+
+    let mut object = ObjectBuilder::<UserData>::new()
+        .with_constructor(|mut user_data| -> Result<Value> {
+            user_data.value = 1;
+
+            Ok(Value::from(user_data.value))
+        })
+        .with_method("count", |mut user_data| -> Result<Value> {
+            user_data.value += 1;
+
+            Ok(Value::from(user_data.value))
+        })
+        .build();
+
+    let rubtle = Rubtle::new();
+
+    rubtle.set_global_object("Counter", &mut object);
+
+    rubtle.eval(
+        r#"
+        var counter = new Counter();
+
+        var value = counter.count();
     "#,
     );
 }

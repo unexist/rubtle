@@ -8,7 +8,8 @@
 /// This program can be distributed under the terms of the GNU GPLv2.
 /// See the file LICENSE for details.
 ///
-use crate::ObjectBuilder;
+
+use crate::{Result, Value, ObjectBuilder};
 
 #[derive(Default)]
 struct UserData {
@@ -37,11 +38,15 @@ fn create_object_builder_object_get_method() {
 #[test]
 fn create_object_builder_object_iter() {
     let object = ObjectBuilder::<UserData>::new()
-        .with_method("print1", |user_data| {
+        .with_method("print1", |user_data| -> Result<Value> {
             println!("{}", user_data.value);
+
+            Ok(Value::from(user_data.value))
         })
-        .with_method("print2", |user_data| {
+        .with_method("print2", |user_data| -> Result<Value> {
             println!("{}", user_data.value);
+
+            Ok(Value::from(user_data.value))
         })
         .build();
 
@@ -58,8 +63,10 @@ fn create_object_builder_object_iter() {
 #[test]
 fn create_builder_with_ctor() {
     let _object = ObjectBuilder::<UserData>::new()
-        .with_constructor(|mut user_data| {
+        .with_constructor(|mut user_data| -> Result<Value>{
             user_data.value = 1;
+
+            Ok(Value::from(user_data.value))
         })
         .build();
 }
@@ -67,11 +74,15 @@ fn create_builder_with_ctor() {
 #[test]
 fn create_builder_with_method() {
     let _object = ObjectBuilder::<UserData>::new()
-        .with_constructor(|mut user_data| {
+        .with_constructor(|mut user_data| -> Result<Value> {
             user_data.value = 1;
+
+            Ok(Value::from(user_data.value))
         })
-        .with_method("increment", |mut user_data| {
+        .with_method("increment", |mut user_data| -> Result<Value> {
             user_data.value += 1;
+
+            Ok(Value::from(user_data.value))
         })
         .build();
 }

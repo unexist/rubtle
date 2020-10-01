@@ -401,7 +401,7 @@ impl Rubtle {
     ///
     /// # Example
     ///
-    ///     use rubtle_lib::{Rubtle, ObjectBuilder};
+    ///     use rubtle_lib::{Rubtle, Result, Value, ObjectBuilder};
     ///
     ///     let rubtle = Rubtle::new();
     ///
@@ -411,8 +411,10 @@ impl Rubtle {
     ///     };
     ///
     ///     let mut object = ObjectBuilder::<UserData>::new()
-    ///         .with_constructor(|mut user_data| {
+    ///         .with_constructor(|mut user_data| -> Result<Value> {
     ///             user_data.value = 0;
+    ///
+    ///             Ok(Value::from(user_data.value))
     ///          })
     ///         .build();
     ///
