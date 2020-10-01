@@ -16,4 +16,6 @@ pub type Result<T> = result::Result<T, Error>;
 
 pub type Callback = Box<dyn Fn(Invocation) -> Result<Value>>;
 
+/* Special object builder types */
+pub type ObjectBuilderCtor<T> = Box<dyn FnMut(&mut T)>;
 pub type ObjectBuilderCall<T> = Box<dyn FnMut(&mut T) -> Result<Value>>;

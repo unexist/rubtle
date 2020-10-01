@@ -63,10 +63,8 @@ fn create_object_builder_object_iter() {
 #[test]
 fn create_builder_with_ctor() {
     let _object = ObjectBuilder::<UserData>::new()
-        .with_constructor(|mut user_data| -> Result<Value>{
+        .with_constructor(|mut user_data| {
             user_data.value = 1;
-
-            Ok(Value::from(user_data.value))
         })
         .build();
 }
@@ -74,10 +72,8 @@ fn create_builder_with_ctor() {
 #[test]
 fn create_builder_with_method() {
     let _object = ObjectBuilder::<UserData>::new()
-        .with_constructor(|mut user_data| -> Result<Value> {
+        .with_constructor(|mut user_data| {
             user_data.value = 1;
-
-            Ok(Value::from(user_data.value))
         })
         .with_method("increment", |mut user_data| -> Result<Value> {
             user_data.value += 1;

@@ -184,10 +184,8 @@ fn set_global_object_with_ctor() {
     };
 
     let mut object = ObjectBuilder::<UserData>::new()
-        .with_constructor(|mut user_data| -> Result<Value> {
+        .with_constructor(|mut user_data| {
             user_data.value = 1;
-
-            Ok(Value::from(user_data.value))
         })
         .build();
 
@@ -210,10 +208,8 @@ fn set_global_object_with_ctor_and_methods() {
     };
 
     let mut object = ObjectBuilder::<UserData>::new()
-        .with_constructor(|mut user_data| -> Result<Value> {
+        .with_constructor(|mut user_data| {
             user_data.value = 1;
-
-            Ok(Value::from(user_data.value))
         })
         .with_method("count", |mut user_data| -> Result<Value> {
             user_data.value += 1;
@@ -251,10 +247,8 @@ fn set_global_object_with_ctor_and_method_with_return_value() {
     };
 
     let mut object = ObjectBuilder::<UserData>::new()
-        .with_constructor(|mut user_data| -> Result<Value> {
+        .with_constructor(|mut user_data| {
             user_data.value = 1;
-
-            Ok(Value::from(user_data.value))
         })
         .with_method("count", |mut user_data| -> Result<Value> {
             user_data.value += 1;

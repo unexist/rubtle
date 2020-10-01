@@ -11,11 +11,12 @@
 use std::collections::HashMap;
 
 use crate::{Result, Value};
-use crate::types::ObjectBuilderCall;
+use crate::types::{ObjectBuilderCtor, ObjectBuilderCall};
 
 #[derive(Default)]
 pub struct Object<T> {
-    pub methods: HashMap<&'static str, ObjectBuilderCall<T>>,
+    ctor: Option<ObjectBuilderCtor<T>>,
+    methods: HashMap<&'static str, ObjectBuilderCall<T>>,
 }
 
 impl<T> Object<T>
@@ -28,6 +29,14 @@ where
 
     pub fn take_method(&mut self, meth_name: &str) -> Option<ObjectBuilderCall<T>> {
         self.methods.remove(meth_name)
+    }
+
+    pub fn take_constructor(&mut self) -> Option<ObjectBuilderCtor<T>> {
+        let mut ctor: Option<ObjectBuilderCtor<T>> = None;
+
+        std::mem::swap(&mut self.ctor, &mut ctor);
+
+        ctor
     }
 }
 
@@ -43,6 +52,7 @@ impl<T> Iterator for Object<T> {
 }
 
 pub struct ObjectBuilder<T> {
+    ctor: Option<ObjectBuilderCtor<T>>,
     methods: HashMap<&'static str, ObjectBuilderCall<T>>,
 }
 
@@ -52,16 +62,16 @@ where
 {
     pub fn new() -> ObjectBuilder<T> {
         ObjectBuilder::<T> {
+            ctor: None,
             methods: HashMap::new(),
         }
     }
 
     pub fn with_constructor<'a, F>(&'a mut self, func: F) -> &'a mut ObjectBuilder<T>
     where
-        F: 'static + FnMut(&mut T) -> Result<Value>,
+        F: 'static + FnMut(&mut T),
     {
-        self.methods
-            .insert("ctor", Box::new(func) as ObjectBuilderCall<T>);
+        self.ctor = Some(Box::new(func) as ObjectBuilderCtor<T>);
 
         self
     }
@@ -70,8 +80,6 @@ where
     where
         F: 'static + FnMut(&mut T) -> Result<Value>,
     {
-        assert!("ctor" != name, "use with_constructor");
-
         self.methods
             .insert(name, Box::new(func) as ObjectBuilderCall<T>);
 
@@ -81,6 +89,8 @@ where
     pub fn build(&mut self) -> Object<T> {
         let mut object = Object::<T>::default();
 
+        /* Kansas city shuffle.. */
+        std::mem::swap(&mut self.ctor, &mut object.ctor);
         std::mem::swap(&mut self.methods, &mut object.methods);
 
         object
