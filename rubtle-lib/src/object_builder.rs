@@ -34,6 +34,7 @@ where
     pub fn take_constructor(&mut self) -> Option<ObjectBuilderCtor<T>> {
         let mut ctor: Option<ObjectBuilderCtor<T>> = None;
 
+        /* Kansas city shuffle.. */
         std::mem::swap(&mut self.ctor, &mut ctor);
 
         ctor
@@ -89,7 +90,7 @@ where
     pub fn build(&mut self) -> Object<T> {
         let mut object = Object::<T>::default();
 
-        /* Kansas city shuffle.. */
+        /* Kansas city shuffle again.. */
         std::mem::swap(&mut self.ctor, &mut object.ctor);
         std::mem::swap(&mut self.methods, &mut object.methods);
 
