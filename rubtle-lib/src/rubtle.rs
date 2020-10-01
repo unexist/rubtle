@@ -17,7 +17,7 @@ use std::panic::{catch_unwind, AssertUnwindSafe};
 use cesu8::{from_cesu8, to_cesu8};
 
 use crate::object_builder::Object;
-use crate::types::{Callback, ObjectBuilderCall};
+use crate::types::{Callback, ObjectBuilderCtor, ObjectBuilderCall};
 use crate::{Invocation, Result, Value};
 
 #[allow(unused_imports)]
@@ -411,10 +411,8 @@ impl Rubtle {
     ///     };
     ///
     ///     let mut object = ObjectBuilder::<UserData>::new()
-    ///         .with_constructor(|mut user_data| -> Result<Value> {
+    ///         .with_constructor(|mut user_data| {
     ///             user_data.value = 0;
-    ///
-    ///             Ok(Value::from(user_data.value))
     ///          })
     ///         .build();
     ///
@@ -442,7 +440,7 @@ impl Rubtle {
             /* Fetch pointer from duktape */
             ffi::duk_push_current_function(ctx);
             ffi::duk_get_prop_string(ctx, -1, CTOR.as_ptr() as *const _);
-            let func_ptr = ffi::duk_get_pointer(ctx, -1) as *mut ObjectBuilderCall<T>;
+            let func_ptr = ffi::duk_get_pointer(ctx, -1) as *mut ObjectBuilderCtor<T>;
             ffi::duk_pop_n(ctx, 2);
 
             assert!(!func_ptr.is_null(), "Null function pointer");
@@ -513,12 +511,17 @@ impl Rubtle {
                     ffi::duk_push_c_function(self.ctx, Some(ctor_wrapper::<T>), -1);
 
                     /* Store ctor wrapper */
-                    if object.has_method("ctor") {
-                        let ctor = object.take_method("ctor").unwrap();
-                        let boxed_func = Box::into_raw(Box::new(ctor));
+                    match object.take_constructor() {
+                        Some(ctor) => {
+                            let boxed_func = Box::into_raw(Box::new(ctor));
 
-                        ffi::duk_push_pointer(self.ctx, boxed_func as *mut _);
-                        ffi::duk_put_prop_string(self.ctx, -2, CTOR.as_ptr() as *const _);
+                            ffi::duk_push_pointer(self.ctx, boxed_func as *mut _);
+                            ffi::duk_put_prop_string(self.ctx, -2, CTOR.as_ptr() as *const _);
+                        },
+                        None => {
+                            ffi::duk_fatal_raw(self.ctx, cstr!("No constructor"));
+                            unreachable!();
+                        }
                     }
 
                     ffi::duk_push_object(self.ctx);
