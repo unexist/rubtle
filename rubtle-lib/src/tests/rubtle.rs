@@ -278,12 +278,9 @@ fn set_global_object_with_ctor_and_method_with_return_value() {
 
     rubtle.set_global_function("assert", |inv: Invocation| -> Result<Value> {
         let assert_val = inv.args.first().unwrap().as_boolean().unwrap();
+        let assert_mesg = inv.args.last().unwrap().coerce_string().unwrap();
 
-        if true != assert_val {
-            eprintln!("Assertion failed: {}", inv.args.last().unwrap().coerce_string().unwrap());
-        }
-
-        assert_eq!(true, assert_val);
+        assert_eq!(true, assert_val, "{}", assert_mesg);
 
         /* Make compiler happy */
         Ok(Value::from(true))
