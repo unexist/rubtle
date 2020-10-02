@@ -309,7 +309,11 @@ impl Rubtle {
 
             for i in 0..nargs {
                 ffi::duk_dup(ctx, i as ffi::duk_idx_t);
-                args.push(rubtle.pop_value().unwrap());
+
+                match rubtle.pop_value() {
+                    Some(val) => args.push(val),
+                    None => eprintln!("Unwrap of None value"),
+                }
             }
 
             let invocation = Invocation {
@@ -449,7 +453,7 @@ impl Rubtle {
             let wrapped_func = || (*func_ptr)(&mut user_data);
 
             let _result = match catch_unwind(AssertUnwindSafe(wrapped_func)) {
-                Ok(result) => result,
+                Ok(res) => res,
                 Err(_) => {
                     ffi::duk_fatal_raw(ctx, cstr!("Fatal error on func call"));
                     unreachable!();
@@ -492,15 +496,27 @@ impl Rubtle {
 
             /* Wrap function and finally call it */
             let wrapped_func = || (*func_ptr)(&mut *udata_ptr);
-            let _result = match catch_unwind(AssertUnwindSafe(wrapped_func)) {
-                Ok(result) => result,
+            let result = match catch_unwind(AssertUnwindSafe(wrapped_func)) {
+                Ok(res) => res,
                 Err(_) => {
                     ffi::duk_fatal_raw(ctx, cstr!("Fatal error on func call"));
                     unreachable!();
                 }
             };
 
-            0
+            let rubtle = Rubtle {
+                ctx: ctx,
+                drop_ctx: false,
+            };
+
+            match result {
+                Ok(val) => {
+                    rubtle.push_value(&val);
+
+                    1
+                },
+                Err(_) => 0,
+            }
         }
 
         unsafe {

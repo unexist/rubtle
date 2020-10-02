@@ -29,7 +29,7 @@ fn create_object_builder_object_has_method() {
 }
 
 #[test]
-fn create_object_builder_object_get_method() {
+fn create_object_builder_object_take_method() {
     let mut object = ObjectBuilder::<UserData>::new().build();
 
     assert!(object.take_method("test").is_none());
