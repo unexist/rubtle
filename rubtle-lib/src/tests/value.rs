@@ -62,3 +62,30 @@ fn convert_string() {
 
     assert_eq!(val, rval.as_string().unwrap());
 }
+
+#[test]
+fn coerce_bool_to_string() {
+    let strval = "true";
+    let val: bool = true;
+    let rval = Value::from(val);
+
+    assert_eq!(strval, rval.coerce_string().unwrap());
+}
+
+#[test]
+fn coerce_number_to_string() {
+    let strval = "4";
+    let val: f64 = 4.0;
+    let rval = Value::from(val);
+
+    assert_eq!(strval, rval.coerce_string().unwrap());
+}
+
+#[test]
+fn coerce_string_to_string() {
+    let strval = "Test";
+    let val = "Test";
+    let rval = Value::from(val);
+
+    assert_eq!(strval, rval.coerce_string().unwrap());
+}

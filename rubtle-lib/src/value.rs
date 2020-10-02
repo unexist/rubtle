@@ -83,7 +83,7 @@ impl Value {
     }
 
     ///
-    /// Return inner boolean value
+    /// Return inner number value
     ///
     /// Returns
     ///
@@ -99,7 +99,7 @@ impl Value {
     }
 
     ///
-    /// Return inner boolean value
+    /// Return inner string value
     ///
     /// Returns
     ///
@@ -111,6 +111,28 @@ impl Value {
             Some(value)
         } else {
             None
+        }
+    }
+
+    ///
+    /// Coerce value to string
+    ///
+    /// Returns
+    ///
+    /// Coerced `String`
+    ///
+
+    pub fn coerce_string(&self) -> Option<String> {
+        match self {
+            Value::Number(val) => {
+                Some(val.to_string())
+            },
+            Value::Boolean(val) => {
+                Some(val.to_string())
+            },
+            Value::Str(val) => {
+                Some(val.clone())
+            }
         }
     }
 }

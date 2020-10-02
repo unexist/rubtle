@@ -9,6 +9,7 @@
 /// See the file LICENSE for details.
 ///
 use crate::{Invocation, ObjectBuilder, Result, Rubtle, Value};
+use crate::debug::*;
 
 ///
 /// Stack
@@ -158,9 +159,12 @@ fn set_and_run_global_printer() {
     let rubtle = Rubtle::new();
 
     rubtle.set_global_function("print", |inv: Invocation| -> Result<Value> {
-        let s = inv.args.first().unwrap();
-
-        println!("{:?}", s.as_string().unwrap());
+        for val in inv.args.iter() {
+            match val.coerce_string() {
+                Some(s) => println!("{:?}", s),
+                None => eprintln!("Error unwrap value"),
+            }
+        }
 
         Ok(Value::from(true))
     });
@@ -261,11 +265,41 @@ fn set_global_object_with_ctor_and_method_with_return_value() {
 
     rubtle.set_global_object("Counter", &mut object);
 
+    rubtle.set_global_function("print", |inv: Invocation| -> Result<Value> {
+        for val in inv.args.iter() {
+            match val.coerce_string() {
+                Some(s) => println!("{:?}", s),
+                None => eprintln!("Error unwrap value"),
+            }
+        }
+
+        Ok(Value::from(true))
+    });
+
+    rubtle.set_global_function("assert", |inv: Invocation| -> Result<Value> {
+        let assert_val = inv.args.first().unwrap().as_boolean().unwrap();
+
+        if true != assert_val {
+            eprintln!("Assertion failed: {}", inv.args.last().unwrap().coerce_string().unwrap());
+        }
+
+        assert_eq!(true, assert_val);
+
+        /* Make compiler happy */
+        Ok(Value::from(true))
+    });
+
     rubtle.eval(
         r#"
         var counter = new Counter();
 
+        counter.count();
+
         var value = counter.count();
+
+        print(value);
+
+        assert(3 == value, "Damn!");
     "#,
     );
 }
