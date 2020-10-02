@@ -14,8 +14,10 @@ use crate::{Invocation, ObjectBuilder, Result, Rubtle, Value};
 /// Helper functions
 ///
 
-fn js_printer(inv: Invocation) -> Result<Value> {
-    for val in inv.args.iter() {
+fn js_printer(inv: Invocation<i8>) -> Result<Value> {
+    let args = inv.args.unwrap();
+
+    for val in args.iter() {
         match val.coerce_string() {
             Some(s) => println!("{:?}", s),
             None => eprintln!("Error unwrap value"),
@@ -25,9 +27,10 @@ fn js_printer(inv: Invocation) -> Result<Value> {
     Ok(Value::from(true))
 }
 
-fn js_assert(inv: Invocation) -> Result<Value> {
-    let assert_val = inv.args.first().unwrap().as_boolean().unwrap();
-    let assert_mesg = inv.args.last().unwrap().coerce_string().unwrap();
+fn js_assert(inv: Invocation<i8>) -> Result<Value> {
+    let args = inv.args.unwrap();
+    let assert_val = args.first().unwrap().as_boolean().unwrap();
+    let assert_mesg = args.last().unwrap().coerce_string().unwrap();
 
     assert_eq!(true, assert_val, "{}", assert_mesg);
 
@@ -171,8 +174,10 @@ fn get_global_string_value() {
 fn set_global_function_as_closure() {
     let rubtle = Rubtle::new();
 
-    rubtle.set_global_function("square", |inv: Invocation| -> Result<Value> {
-        let i = inv.args.first().unwrap();
+    rubtle.set_global_function("square", |inv: Invocation<i8>| -> Result<Value> {
+        let args = inv.args.unwrap();
+
+        let i = args.first().unwrap();
 
         Ok(Value::from(i.as_number().unwrap() * i.as_number().unwrap()))
     });
@@ -203,8 +208,10 @@ fn set_global_object_with_ctor() {
     };
 
     let mut object = ObjectBuilder::<UserData>::new()
-        .with_constructor(|mut user_data| {
-            user_data.value = 1;
+        .with_constructor(|inv| {
+            let mut udata = inv.udata.as_mut().unwrap();
+
+            udata.value = 1;
         })
         .build();
 
@@ -224,25 +231,24 @@ fn set_global_object_with_ctor() {
 }
 
 #[test]
-fn set_global_object_with_ctor_and_methods() {
+fn set_global_object_with_ctor_and_method() {
     #[derive(Default)]
     struct UserData {
         value: i32,
     };
 
     let mut object = ObjectBuilder::<UserData>::new()
-        .with_constructor(|mut user_data| {
-            user_data.value = 1;
-        })
-        .with_method("count", |mut user_data| -> Result<Value> {
-            user_data.value += 1;
+        .with_constructor(|inv| {
+            let mut udata = inv.udata.as_mut().unwrap();
 
-            Ok(Value::from(user_data.value))
+            udata.value = 1;
         })
-        .with_method("print", |user_data| -> Result<Value> {
-            println!("Value={}", user_data.value);
+        .with_method("inc", |inv| -> Result<Value> {
+            let mut udata = inv.udata.as_mut().unwrap();
 
-            Ok(Value::from(user_data.value))
+            udata.value += 1;
+
+            Ok(Value::from(udata.value))
         })
         .build();
 
@@ -258,8 +264,54 @@ fn set_global_object_with_ctor_and_methods() {
 
         assert(typeof counter != 'undefined', "Damn!");
 
-        counter.count();
-        counter.count();
+        counter.inc();
+    "#,
+    );
+}
+
+#[test]
+fn set_global_object_with_ctor_and_methods() {
+    #[derive(Default)]
+    struct UserData {
+        value: i32,
+    };
+
+    let mut object = ObjectBuilder::<UserData>::new()
+        .with_constructor(|inv| {
+            let mut udata = inv.udata.as_mut().unwrap();
+
+            udata.value = 1;
+        })
+        .with_method("inc", |inv| -> Result<Value> {
+            let mut udata = inv.udata.as_mut().unwrap();
+
+            udata.value += 1;
+
+            Ok(Value::from(udata.value))
+        })
+        .with_method("print", |inv| -> Result<Value> {
+            let udata = inv.udata.as_ref().unwrap();
+
+            println!("Value={}", udata.value);
+
+            Ok(Value::from(udata.value))
+        })
+        .build();
+
+    let rubtle = Rubtle::new();
+
+    rubtle.set_global_object("Counter", &mut object);
+
+    rubtle.set_global_function("assert", js_assert);
+
+    rubtle.eval(
+        r#"
+        var counter = new Counter();
+
+        assert(typeof counter != 'undefined', "Damn!");
+
+        counter.inc();
+        counter.inc();
 
         counter.print();
     "#,
@@ -274,13 +326,17 @@ fn set_global_object_with_ctor_and_method_with_return_value() {
     };
 
     let mut object = ObjectBuilder::<UserData>::new()
-        .with_constructor(|mut user_data| {
-            user_data.value = 1;
-        })
-        .with_method("count", |mut user_data| -> Result<Value> {
-            user_data.value += 1;
+        .with_constructor(|inv| {
+            let mut udata = inv.udata.as_mut().unwrap();
 
-            Ok(Value::from(user_data.value))
+            udata.value = 1;
+        })
+        .with_method("inc", |inv| -> Result<Value> {
+            let mut udata = inv.udata.as_mut().unwrap();
+
+            udata.value += 1;
+
+            Ok(Value::from(udata.value))
         })
         .build();
 
@@ -297,13 +353,103 @@ fn set_global_object_with_ctor_and_method_with_return_value() {
 
         assert(typeof counter != 'undefined', "Damn!");
 
-        counter.count();
+        counter.inc();
 
-        var value = counter.count();
+        var value = counter.inc();
 
         print(value);
 
         assert(3 == value, "Damn!");
+    "#,
+    );
+}
+
+#[test]
+fn set_global_object_with_ctor_with_arguments_and_method_with_return_value() {
+    #[derive(Default)]
+    struct UserData {
+        value: i32,
+    };
+
+    let mut object = ObjectBuilder::<UserData>::new()
+        .with_constructor(|inv| {
+            let mut udata = inv.udata.as_mut().unwrap();
+            let args = inv.args.as_mut().unwrap();
+
+            match args.first() {
+                Some(val) => udata.value = val.as_number().unwrap() as i32,
+                None => udata.value = 1,
+            }
+        })
+        .with_method("inc", |inv| -> Result<Value> {
+            let mut udata = inv.udata.as_mut().unwrap();
+
+            udata.value += 1;
+
+            Ok(Value::from(udata.value))
+        })
+        .build();
+
+    let rubtle = Rubtle::new();
+
+    rubtle.set_global_object("Counter", &mut object);
+
+    rubtle.set_global_function("assert", js_assert);
+
+    rubtle.eval(
+        r#"
+        var counter = new Counter(5);
+
+        assert(typeof counter != 'undefined', "Damn!");
+
+        var value = counter.inc();
+
+        assert(6 == value, "Damn!");
+    "#,
+    );
+}
+
+#[test]
+fn set_global_object_with_ctor_and_method_with_arguments_and_return_value() {
+    #[derive(Default)]
+    struct UserData {
+        value: i32,
+    };
+
+    let mut object = ObjectBuilder::<UserData>::new()
+        .with_constructor(|inv| {
+            let mut udata = inv.udata.as_mut().unwrap();
+
+            udata.value = 1;
+        })
+        .with_method("inc", |inv| -> Result<Value> {
+            let mut udata = inv.udata.as_mut().unwrap();
+            let args = inv.args.as_mut().unwrap();
+
+            match args.first() {
+                Some(val) => udata.value += val.as_number().unwrap() as i32,
+                None => udata.value += 1,
+            }
+
+            Ok(Value::from(udata.value))
+        })
+        .build();
+
+    let rubtle = Rubtle::new();
+
+    rubtle.set_global_object("Counter", &mut object);
+
+    rubtle.set_global_function("assert", js_assert);
+
+    rubtle.eval(
+        r#"
+        var counter = new Counter();
+
+        assert(typeof counter != 'undefined', "Damn!");
+
+        var value = counter.inc(9);
+
+        assert(10 == value, "Damn!");
     "#,
     );
 }

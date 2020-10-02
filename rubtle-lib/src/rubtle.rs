@@ -280,8 +280,9 @@ impl Rubtle {
     ///
     ///     let rubtle = Rubtle::new();
     ///
-    ///     let printer = |inv: Invocation| -> Result<Value> {
-    ///         let s = inv.args.first().unwrap();
+    ///     let printer = |inv: Invocation<i8>| -> Result<Value> {
+    ///         let args = inv.args.unwrap();
+    ///         let s = args.first().unwrap();
     ///
     ///         println!("{:?}", s.as_string().unwrap());
     ///
@@ -291,11 +292,15 @@ impl Rubtle {
     ///     rubtle.set_global_function("print", printer);
     ///
 
-    pub fn set_global_function<F>(&self, name: &str, func: F)
+    pub fn set_global_function<F, T>(&self, name: &str, func: F)
     where
-        F: 'static + Fn(Invocation) -> Result<Value>,
+        T: 'static + Default,
+        F: 'static + Fn(Invocation<T>) -> Result<Value>,
     {
-        unsafe extern "C" fn wrapper(ctx: *mut ffi::duk_context) -> ffi::duk_ret_t {
+        unsafe extern "C" fn wrapper<T>(ctx: *mut ffi::duk_context) -> ffi::duk_ret_t
+        where
+            T: Default + 'static,
+        {
             /* Get arguments from stack */
             let rubtle = Rubtle {
                 ctx: ctx,
@@ -303,9 +308,6 @@ impl Rubtle {
             };
             let nargs = ffi::duk_get_top(ctx) as usize;
             let mut args = Vec::with_capacity(nargs);
-
-            //ffi::duk_push_this(ctx);
-            //let this = ducc.pop_value();
 
             for i in 0..nargs {
                 ffi::duk_dup(ctx, i as ffi::duk_idx_t);
@@ -316,16 +318,17 @@ impl Rubtle {
                 }
             }
 
-            let invocation = Invocation {
+            /* Assemble invocation */
+            let invocation = Invocation::<T> {
                 rubtle: &rubtle,
-                this: Value::from(1),
-                args: args,
+                args: Some(args),
+                udata: None,
             };
 
             /* Fetch pointer from duktape */
             ffi::duk_push_current_function(ctx);
             ffi::duk_get_prop_string(ctx, -1, FUNC.as_ptr() as *const _);
-            let func_ptr = ffi::duk_get_pointer(ctx, -1) as *mut Callback;
+            let func_ptr = ffi::duk_get_pointer(ctx, -1) as *mut Callback<T>;
             ffi::duk_pop_n(ctx, 2);
 
             /* Wrap function and finally call it */
@@ -347,12 +350,15 @@ impl Rubtle {
             }
         }
 
-        unsafe extern "C" fn finalizer(ctx: *mut ffi::duk_context) -> ffi::duk_ret_t {
+        unsafe extern "C" fn finalizer<T>(ctx: *mut ffi::duk_context) -> ffi::duk_ret_t
+        where
+            T: Default + 'static,
+        {
             ffi::duk_require_stack(ctx, 1);
             ffi::duk_get_prop_string(ctx, 0, FUNC.as_ptr() as *const _);
 
             /* Get box and drop it */
-            let callback = Box::from_raw(ffi::duk_get_pointer(ctx, -1) as *mut Callback);
+            let callback = Box::from_raw(ffi::duk_get_pointer(ctx, -1) as *mut Callback<T>);
 
             drop(callback);
 
@@ -369,10 +375,10 @@ impl Rubtle {
             match cstr {
                 Ok(cval) => {
                     ffi::duk_require_stack(self.ctx, 2);
-                    ffi::duk_push_c_function(self.ctx, Some(wrapper), -1); //< (DUK_VARARGS)
+                    ffi::duk_push_c_function(self.ctx, Some(wrapper::<T>), -1); //< (DUK_VARARGS)
 
                     /* Store wrapper */
-                    let boxed_func = Box::into_raw(Box::new(Box::new(func) as Callback));
+                    let boxed_func = Box::into_raw(Box::new(Box::new(func) as Callback<T>));
 
                     assert!(!boxed_func.is_null(), "Null function pointer");
 
@@ -380,7 +386,7 @@ impl Rubtle {
                     ffi::duk_put_prop_string(self.ctx, -2, FUNC.as_ptr() as *const _);
 
                     /* Store finalizer */
-                    ffi::duk_push_c_function(self.ctx, Some(finalizer), 1);
+                    ffi::duk_push_c_function(self.ctx, Some(finalizer::<T>), 1);
                     ffi::duk_set_finalizer(self.ctx, -2);
 
                     /* Finally store as global function */
@@ -415,8 +421,10 @@ impl Rubtle {
     ///     };
     ///
     ///     let mut object = ObjectBuilder::<UserData>::new()
-    ///         .with_constructor(|mut user_data| {
-    ///             user_data.value = 0;
+    ///         .with_constructor(|inv| {
+    ///             let mut udata = inv.udata.as_mut().unwrap();
+    ///
+    ///             udata.value = 0;
     ///          })
     ///         .build();
     ///
@@ -438,8 +446,29 @@ impl Rubtle {
                 return -1;
             }
 
-            /* Create user data */
-            let mut user_data = T::default();
+            /* Get arguments from stack */
+            let rubtle = Rubtle {
+                ctx: ctx,
+                drop_ctx: false,
+            };
+            let nargs = ffi::duk_get_top(ctx) as usize;
+            let mut args = Vec::with_capacity(nargs);
+
+            for i in 0..nargs {
+                ffi::duk_dup(ctx, i as ffi::duk_idx_t);
+
+                match rubtle.pop_value() {
+                    Some(val) => args.push(val),
+                    None => eprintln!("Unwrap of None value"),
+                }
+            }
+
+            /* Create invocation data */
+            let mut inv = Invocation {
+                rubtle: &rubtle,
+                args: Some(args),
+                udata: Some(T::default()),
+            };
 
             /* Fetch pointer from duktape */
             ffi::duk_push_current_function(ctx);
@@ -450,7 +479,7 @@ impl Rubtle {
             assert!(!func_ptr.is_null(), "Null function pointer");
 
             /* Wrap function and finally call it */
-            let wrapped_func = || (*func_ptr)(&mut user_data);
+            let wrapped_func = || (*func_ptr)(&mut inv);
 
             let _result = match catch_unwind(AssertUnwindSafe(wrapped_func)) {
                 Ok(res) => res,
@@ -460,7 +489,7 @@ impl Rubtle {
                 }
             };
 
-            let boxed_udata = Box::into_raw(Box::new(user_data));
+            let boxed_udata = Box::into_raw(Box::new(inv));
 
             assert!(!boxed_udata.is_null(), "Null user data pointer");
 
@@ -478,6 +507,23 @@ impl Rubtle {
         where
             T: Default + 'static,
         {
+            /* Get arguments from stack */
+            let rubtle = Rubtle {
+                ctx: ctx,
+                drop_ctx: false,
+            };
+            let nargs = ffi::duk_get_top(ctx) as usize;
+            let mut args = Vec::with_capacity(nargs);
+
+            for i in 0..nargs {
+                ffi::duk_dup(ctx, i as ffi::duk_idx_t);
+
+                match rubtle.pop_value() {
+                    Some(val) => args.push(val),
+                    None => eprintln!("Unwrap of None value"),
+                }
+            }
+
             /* Fetch pointer from duktape */
             ffi::duk_push_current_function(ctx);
             ffi::duk_get_prop_string(ctx, -1, METH.as_ptr() as *const _);
@@ -489,24 +535,21 @@ impl Rubtle {
             /* Fetch user data from duktape */
             ffi::duk_push_this(ctx);
             ffi::duk_get_prop_string(ctx, -1, UDATA.as_ptr() as *const _);
-            let udata_ptr = ffi::duk_get_pointer(ctx, -1) as *mut T;
+            let inv_ptr = ffi::duk_get_pointer(ctx, -1) as *mut Invocation<T>;
             ffi::duk_pop_n(ctx, 2);
 
-            assert!(!udata_ptr.is_null(), "Null user data pointer");
+            assert!(!inv_ptr.is_null(), "Null user data pointer");
+
+            (*inv_ptr).args = Some(args);
 
             /* Wrap function and finally call it */
-            let wrapped_func = || (*func_ptr)(&mut *udata_ptr);
+            let wrapped_func = || (*func_ptr)(&mut *inv_ptr);
             let result = match catch_unwind(AssertUnwindSafe(wrapped_func)) {
                 Ok(res) => res,
                 Err(_) => {
                     ffi::duk_fatal_raw(ctx, cstr!("Fatal error on func call"));
                     unreachable!();
                 }
-            };
-
-            let rubtle = Rubtle {
-                ctx: ctx,
-                drop_ctx: false,
             };
 
             match result {

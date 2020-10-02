@@ -10,8 +10,8 @@
 //
 use crate::{Rubtle, Value};
 
-pub struct Invocation<'rubtle> {
+pub struct Invocation<'rubtle, T> {
     pub rubtle: &'rubtle Rubtle,
-    pub this: Value,
-    pub args: Vec<Value>,
+    pub args: Option<Vec<Value>>,
+    pub udata: Option<T>,
 }
