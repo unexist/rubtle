@@ -9,7 +9,31 @@
 /// See the file LICENSE for details.
 ///
 use crate::{Invocation, ObjectBuilder, Result, Rubtle, Value};
-use crate::debug::*;
+
+///
+/// Helper functions
+///
+
+fn js_printer(inv: Invocation) -> Result<Value> {
+    for val in inv.args.iter() {
+        match val.coerce_string() {
+            Some(s) => println!("{:?}", s),
+            None => eprintln!("Error unwrap value"),
+        }
+    }
+
+    Ok(Value::from(true))
+}
+
+fn js_assert(inv: Invocation) -> Result<Value> {
+    let assert_val = inv.args.first().unwrap().as_boolean().unwrap();
+    let assert_mesg = inv.args.last().unwrap().coerce_string().unwrap();
+
+    assert_eq!(true, assert_val, "{}", assert_mesg);
+
+    /* Make compiler happy */
+    Ok(Value::from(true))
+}
 
 ///
 /// Stack
@@ -144,7 +168,7 @@ fn get_global_string_value() {
 ///
 
 #[test]
-fn set_global_function() {
+fn set_global_function_as_closure() {
     let rubtle = Rubtle::new();
 
     rubtle.set_global_function("square", |inv: Invocation| -> Result<Value> {
@@ -158,16 +182,7 @@ fn set_global_function() {
 fn set_and_run_global_printer() {
     let rubtle = Rubtle::new();
 
-    rubtle.set_global_function("print", |inv: Invocation| -> Result<Value> {
-        for val in inv.args.iter() {
-            match val.coerce_string() {
-                Some(s) => println!("{:?}", s),
-                None => eprintln!("Error unwrap value"),
-            }
-        }
-
-        Ok(Value::from(true))
-    });
+    rubtle.set_global_function("print", js_printer);
 
     rubtle.eval(
         r#"
@@ -197,9 +212,13 @@ fn set_global_object_with_ctor() {
 
     rubtle.set_global_object("Counter", &mut object);
 
+    rubtle.set_global_function("assert", js_assert);
+
     rubtle.eval(
         r#"
         var counter = new Counter();
+
+        assert(typeof counter != 'undefined', "Damn!");
     "#,
     );
 }
@@ -231,12 +250,16 @@ fn set_global_object_with_ctor_and_methods() {
 
     rubtle.set_global_object("Counter", &mut object);
 
+    rubtle.set_global_function("assert", js_assert);
+
     rubtle.eval(
         r#"
         var counter = new Counter();
 
+        assert(typeof counter != 'undefined', "Damn!");
+
         counter.count();
-        counter.count()
+        counter.count();
 
         counter.print();
     "#,
@@ -265,30 +288,14 @@ fn set_global_object_with_ctor_and_method_with_return_value() {
 
     rubtle.set_global_object("Counter", &mut object);
 
-    rubtle.set_global_function("print", |inv: Invocation| -> Result<Value> {
-        for val in inv.args.iter() {
-            match val.coerce_string() {
-                Some(s) => println!("{:?}", s),
-                None => eprintln!("Error unwrap value"),
-            }
-        }
-
-        Ok(Value::from(true))
-    });
-
-    rubtle.set_global_function("assert", |inv: Invocation| -> Result<Value> {
-        let assert_val = inv.args.first().unwrap().as_boolean().unwrap();
-        let assert_mesg = inv.args.last().unwrap().coerce_string().unwrap();
-
-        assert_eq!(true, assert_val, "{}", assert_mesg);
-
-        /* Make compiler happy */
-        Ok(Value::from(true))
-    });
+    rubtle.set_global_function("print", js_printer);
+    rubtle.set_global_function("assert", js_assert);
 
     rubtle.eval(
         r#"
         var counter = new Counter();
+
+        assert(typeof counter != 'undefined', "Damn!");
 
         counter.count();
 
