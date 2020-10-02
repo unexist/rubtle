@@ -36,6 +36,13 @@ fn create_object_builder_object_get_method() {
 }
 
 #[test]
+fn create_object_builder_object_take_ctor() {
+    let mut object = ObjectBuilder::<UserData>::new().build();
+
+    assert!(object.take_constructor().is_none());
+}
+
+#[test]
 fn create_object_builder_object_iter() {
     let object = ObjectBuilder::<UserData>::new()
         .with_method("print1", |user_data| -> Result<Value> {
