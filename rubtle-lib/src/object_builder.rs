@@ -10,7 +10,7 @@
 //
 use std::collections::HashMap;
 
-use crate::{Result, Value};
+use crate::{Result, Value, Invocation};
 use crate::types::{ObjectBuilderCtor, ObjectBuilderCall};
 
 #[derive(Default)]
@@ -70,7 +70,7 @@ where
 
     pub fn with_constructor<'a, F>(&'a mut self, func: F) -> &'a mut ObjectBuilder<T>
     where
-        F: 'static + FnMut(&mut T),
+        F: 'static + FnMut(&mut Invocation<T>),
     {
         self.ctor = Some(Box::new(func) as ObjectBuilderCtor<T>);
 
@@ -79,7 +79,7 @@ where
 
     pub fn with_method<'a, F>(&'a mut self, name: &'static str, func: F) -> &'a mut ObjectBuilder<T>
     where
-        F: 'static + FnMut(&mut T) -> Result<Value>,
+        F: 'static + FnMut(&mut Invocation<T>) -> Result<Value>,
     {
         self.methods
             .insert(name, Box::new(func) as ObjectBuilderCall<T>);
