@@ -174,12 +174,12 @@ fn get_global_string_value() {
 fn set_global_function_as_closure() {
     let rubtle = Rubtle::new();
 
-    rubtle.set_global_function("square", |inv: Invocation<i8>| -> Result<Value> {
+    rubtle.set_global_function("square", |inv| -> Result<Value> {
         let args = inv.args.unwrap();
 
-        let i = args.first().unwrap();
+        let i = args.first().unwrap().as_number().unwrap();
 
-        Ok(Value::from(i.as_number().unwrap() * i.as_number().unwrap()))
+        Ok(Value::from(i * i))
     });
 }
 
@@ -374,7 +374,7 @@ fn set_global_object_with_ctor_with_arguments_and_method_with_return_value() {
     let mut object = ObjectBuilder::<UserData>::new()
         .with_constructor(|inv| {
             let mut udata = inv.udata.as_mut().unwrap();
-            let args = inv.args.as_mut().unwrap();
+            let args = inv.args.as_ref().unwrap();
 
             match args.first() {
                 Some(val) => udata.value = val.as_number().unwrap() as i32,
@@ -410,7 +410,7 @@ fn set_global_object_with_ctor_with_arguments_and_method_with_return_value() {
 }
 
 #[test]
-fn set_global_object_with_ctor_and_method_with_arguments_and_return_value() {
+fn set_global_object_with_ctor_with_arguments_and_method_with_arguments_and_return_value() {
     #[derive(Default)]
     struct UserData {
         value: i32,
@@ -419,12 +419,16 @@ fn set_global_object_with_ctor_and_method_with_arguments_and_return_value() {
     let mut object = ObjectBuilder::<UserData>::new()
         .with_constructor(|inv| {
             let mut udata = inv.udata.as_mut().unwrap();
+            let args = inv.args.as_ref().unwrap();
 
-            udata.value = 1;
+            match args.first() {
+                Some(val) => udata.value = val.as_number().unwrap() as i32,
+                None => udata.value = 1,
+            }
         })
         .with_method("inc", |inv| -> Result<Value> {
             let mut udata = inv.udata.as_mut().unwrap();
-            let args = inv.args.as_mut().unwrap();
+            let args = inv.args.as_ref().unwrap();
 
             match args.first() {
                 Some(val) => udata.value += val.as_number().unwrap() as i32,
@@ -443,11 +447,11 @@ fn set_global_object_with_ctor_and_method_with_arguments_and_return_value() {
 
     rubtle.eval(
         r#"
-        var counter = new Counter();
+        var counter = new Counter(2);
 
         assert(typeof counter != 'undefined', "Damn!");
 
-        var value = counter.inc(9);
+        var value = counter.inc(8);
 
         assert(10 == value, "Damn!");
     "#,

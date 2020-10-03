@@ -292,15 +292,11 @@ impl Rubtle {
     ///     rubtle.set_global_function("print", printer);
     ///
 
-    pub fn set_global_function<F, T>(&self, name: &str, func: F)
+    pub fn set_global_function<F>(&self, name: &str, func: F)
     where
-        T: 'static + Default,
-        F: 'static + Fn(Invocation<T>) -> Result<Value>,
+        F: 'static + Fn(Invocation<i8>) -> Result<Value>,
     {
-        unsafe extern "C" fn wrapper<T>(ctx: *mut ffi::duk_context) -> ffi::duk_ret_t
-        where
-            T: Default + 'static,
-        {
+        unsafe extern "C" fn wrapper<T>(ctx: *mut ffi::duk_context) -> ffi::duk_ret_t {
             /* Get arguments from stack */
             let rubtle = Rubtle {
                 ctx: ctx,
@@ -319,7 +315,7 @@ impl Rubtle {
             }
 
             /* Assemble invocation */
-            let invocation = Invocation::<T> {
+            let invocation = Invocation::<i8> {
                 rubtle: &rubtle,
                 args: Some(args),
                 udata: None,
@@ -328,7 +324,7 @@ impl Rubtle {
             /* Fetch pointer from duktape */
             ffi::duk_push_current_function(ctx);
             ffi::duk_get_prop_string(ctx, -1, FUNC.as_ptr() as *const _);
-            let func_ptr = ffi::duk_get_pointer(ctx, -1) as *mut Callback<T>;
+            let func_ptr = ffi::duk_get_pointer(ctx, -1) as *mut Callback<i8>;
             ffi::duk_pop_n(ctx, 2);
 
             /* Wrap function and finally call it */
@@ -350,15 +346,12 @@ impl Rubtle {
             }
         }
 
-        unsafe extern "C" fn finalizer<T>(ctx: *mut ffi::duk_context) -> ffi::duk_ret_t
-        where
-            T: Default + 'static,
-        {
+        unsafe extern "C" fn finalizer<T>(ctx: *mut ffi::duk_context) -> ffi::duk_ret_t {
             ffi::duk_require_stack(ctx, 1);
             ffi::duk_get_prop_string(ctx, 0, FUNC.as_ptr() as *const _);
 
             /* Get box and drop it */
-            let callback = Box::from_raw(ffi::duk_get_pointer(ctx, -1) as *mut Callback<T>);
+            let callback = Box::from_raw(ffi::duk_get_pointer(ctx, -1) as *mut Callback<i8>);
 
             drop(callback);
 
@@ -375,10 +368,10 @@ impl Rubtle {
             match cstr {
                 Ok(cval) => {
                     ffi::duk_require_stack(self.ctx, 2);
-                    ffi::duk_push_c_function(self.ctx, Some(wrapper::<T>), -1); //< (DUK_VARARGS)
+                    ffi::duk_push_c_function(self.ctx, Some(wrapper::<i8>), -1); //< (DUK_VARARGS)
 
                     /* Store wrapper */
-                    let boxed_func = Box::into_raw(Box::new(Box::new(func) as Callback<T>));
+                    let boxed_func = Box::into_raw(Box::new(Box::new(func) as Callback<i8>));
 
                     assert!(!boxed_func.is_null(), "Null function pointer");
 
@@ -386,7 +379,7 @@ impl Rubtle {
                     ffi::duk_put_prop_string(self.ctx, -2, FUNC.as_ptr() as *const _);
 
                     /* Store finalizer */
-                    ffi::duk_push_c_function(self.ctx, Some(finalizer::<T>), 1);
+                    ffi::duk_push_c_function(self.ctx, Some(finalizer::<i8>), 1);
                     ffi::duk_set_finalizer(self.ctx, -2);
 
                     /* Finally store as global function */
