@@ -10,6 +10,10 @@
 ///
 use crate::Value;
 
+///
+/// Create value
+///
+
 #[test]
 fn create_boolean_value() {
     let val: bool = true;
@@ -40,6 +44,19 @@ fn create_string_value() {
 }
 
 #[test]
+fn create_none_value() {
+    let rval = Value::from(());
+
+    assert!(rval.is_none());
+
+    assert_eq!((), rval.into());
+}
+
+///
+/// Convert values
+///
+
+#[test]
 fn convert_boolean() {
     let val: bool = true;
     let rval = Value::from(val);
@@ -62,6 +79,18 @@ fn convert_string() {
 
     assert_eq!(val, rval.as_string().unwrap());
 }
+
+#[test]
+fn convert_none() {
+    let val = ();
+    let rval = Value::from(val);
+
+    assert_eq!(val, rval.as_none().unwrap());
+}
+
+///
+/// Coerce to string
+///
 
 #[test]
 fn coerce_bool_to_string() {

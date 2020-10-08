@@ -15,6 +15,7 @@ pub enum Value {
     Boolean(bool),
     Number(f64),
     Str(String),
+    None,
 }
 
 impl Value {
@@ -60,6 +61,22 @@ impl Value {
 
     pub fn is_string(&self) -> bool {
         if let Value::Str(_) = *self {
+            true
+        } else {
+            false
+        }
+    }
+
+    ///
+    /// Check whether value is a string
+    ///
+    /// Returns
+    ///
+    /// `true` if the value is a string; otherwise `false`
+    ///
+
+    pub fn is_none(&self) -> bool {
+        if let Value::None = self {
             true
         } else {
             false
@@ -115,6 +132,22 @@ impl Value {
     }
 
     ///
+    /// Return inner none value
+    ///
+    /// Returns
+    ///
+    /// `Option` either with value or without
+    ///
+
+    pub fn as_none(&self) -> Option<()> {
+        if let Value::None = *self {
+            Some(())
+        } else {
+            None
+        }
+    }
+
+    ///
     /// Coerce value to string
     ///
     /// Returns
@@ -124,15 +157,10 @@ impl Value {
 
     pub fn coerce_string(&self) -> Option<String> {
         match self {
-            Value::Number(val) => {
-                Some(val.to_string())
-            },
-            Value::Boolean(val) => {
-                Some(val.to_string())
-            },
-            Value::Str(val) => {
-                Some(val.clone())
-            }
+            Value::Number(val) => Some(val.to_string()),
+            Value::Boolean(val) => Some(val.to_string()),
+            Value::Str(val) => Some(val.clone()),
+            Value::None => None,
         }
     }
 }
@@ -217,5 +245,26 @@ impl From<Value> for &str {
 impl From<&str> for Value {
     fn from(src: &str) -> Self {
         Value::Str(src.into())
+    }
+}
+
+///
+/// Empty tuple
+///
+
+impl From<Value> for () {
+    fn from(src: Value) -> () {
+        if let Value::None = src {
+            ()
+        } else {
+            unimplemented!();
+        }
+    }
+}
+
+
+impl From<()> for Value {
+    fn from(_src: ()) -> Self {
+        Value::None
     }
 }
