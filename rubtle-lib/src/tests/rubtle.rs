@@ -75,6 +75,17 @@ fn push_and_pop_string_value() {
     assert_eq!(rval, rval2);
 }
 
+#[test]
+fn push_and_pop_none_value() {
+    let rubtle = Rubtle::new();
+    let rval = Value::from(());
+
+    rubtle.push_value(&rval);
+    let rval2 = rubtle.pop_value().unwrap();
+
+    assert_eq!(rval, rval2);
+}
+
 ///
 /// Eval
 ///

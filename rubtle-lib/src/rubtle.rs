@@ -101,7 +101,10 @@ impl Rubtle {
                     }
                 },
 
-                Value::None => unimplemented!()
+                Value::None => {
+                    ffi::duk_require_stack(self.ctx, 1);
+                    ffi::duk_push_undefined(self.ctx);
+                }
             }
         }
     }
@@ -161,7 +164,7 @@ impl Rubtle {
                     ffi::duk_remove(self.ctx, idx);
 
                     Some(Value::Boolean(0 != dval))
-                }
+                },
 
                 ffi::DUK_TYPE_NUMBER => {
                     let dval = ffi::duk_get_number(self.ctx, idx);
@@ -169,7 +172,7 @@ impl Rubtle {
                     ffi::duk_remove(self.ctx, idx);
 
                     Some(Value::Number(dval))
-                }
+                },
 
                 ffi::DUK_TYPE_STRING => {
                     let mut len = 0;
@@ -184,7 +187,11 @@ impl Rubtle {
                         Ok(string) => Some(Value::Str(string.into_owned())),
                         Err(_) => None,
                     }
-                }
+                },
+
+                ffi::DUK_TYPE_UNDEFINED => {
+                    Some(Value::None)
+                },
 
                 _ => None,
             }
