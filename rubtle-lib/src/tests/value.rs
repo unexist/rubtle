@@ -118,3 +118,12 @@ fn coerce_string_to_string() {
 
     assert_eq!(strval, rval.coerce_string().unwrap());
 }
+
+#[test]
+fn coerce_none_to_string() {
+    let strval = "None";
+    let val = ();
+    let rval = Value::from(val);
+
+    assert_eq!(strval, rval.coerce_string().unwrap());
+}
