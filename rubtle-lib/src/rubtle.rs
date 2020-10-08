@@ -17,7 +17,7 @@ use std::panic::{catch_unwind, AssertUnwindSafe};
 use cesu8::{from_cesu8, to_cesu8};
 
 use crate::object_builder::Object;
-use crate::types::{Callback, ObjectBuilderCtor, ObjectBuilderCall};
+use crate::types::{Callback, ObjectBuilderCall, ObjectBuilderCtor};
 use crate::{Invocation, Result, Value};
 
 #[allow(unused_imports)]
@@ -99,7 +99,9 @@ impl Rubtle {
                         }
                         Err(_) => unimplemented!(),
                     }
-                }
+                },
+
+                Value::None => unimplemented!()
             }
         }
     }
@@ -550,7 +552,7 @@ impl Rubtle {
                     rubtle.push_value(&val);
 
                     1
-                },
+                }
                 Err(_) => 0,
             }
         }
@@ -569,7 +571,7 @@ impl Rubtle {
 
                             ffi::duk_push_pointer(self.ctx, boxed_func as *mut _);
                             ffi::duk_put_prop_string(self.ctx, -2, CTOR.as_ptr() as *const _);
-                        },
+                        }
                         None => {
                             ffi::duk_fatal_raw(self.ctx, cstr!("No constructor"));
                             unreachable!();
