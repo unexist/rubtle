@@ -160,7 +160,7 @@ impl Value {
             Value::Number(val) => Some(val.to_string()),
             Value::Boolean(val) => Some(val.to_string()),
             Value::Str(val) => Some(val.clone()),
-            Value::None => None,
+            Value::None => Some(String::from("None")),
         }
     }
 }
