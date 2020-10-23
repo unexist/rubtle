@@ -12,13 +12,31 @@ use std::convert::From;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Value {
+    None,
     Boolean(bool),
     Number(f64),
     Str(String),
-    None,
+    Array(Vec<Value>),
 }
 
 impl Value {
+
+    ///
+    /// Check whether value is a string
+    ///
+    /// Returns
+    ///
+    /// `true` if the value is a string; otherwise `false`
+    ///
+
+    pub fn is_none(&self) -> bool {
+        if let Value::None = self {
+            true
+        } else {
+            false
+        }
+    }
+
     ///
     /// Check whether value is a boolean
     ///
@@ -68,18 +86,34 @@ impl Value {
     }
 
     ///
-    /// Check whether value is a string
+    /// Check whether value is an array
     ///
     /// Returns
     ///
-    /// `true` if the value is a string; otherwise `false`
+    /// `true` if the value is an array; otherwise `false`
     ///
 
-    pub fn is_none(&self) -> bool {
-        if let Value::None = self {
+    pub fn is_array(&self) -> bool {
+        if let Value::Array(_) = *self {
             true
         } else {
             false
+        }
+    }
+
+    ///
+    /// Return inner none value
+    ///
+    /// Returns
+    ///
+    /// `Option` either with value or without
+    ///
+
+    pub fn as_none(&self) -> Option<()> {
+        if let Value::None = *self {
+            Some(())
+        } else {
+            None
         }
     }
 
@@ -132,22 +166,6 @@ impl Value {
     }
 
     ///
-    /// Return inner none value
-    ///
-    /// Returns
-    ///
-    /// `Option` either with value or without
-    ///
-
-    pub fn as_none(&self) -> Option<()> {
-        if let Value::None = *self {
-            Some(())
-        } else {
-            None
-        }
-    }
-
-    ///
     /// Coerce value to string
     ///
     /// Returns
@@ -157,11 +175,33 @@ impl Value {
 
     pub fn coerce_string(&self) -> Option<String> {
         match self {
+            Value::None => Some(String::from("None")),
             Value::Number(val) => Some(val.to_string()),
             Value::Boolean(val) => Some(val.to_string()),
             Value::Str(val) => Some(val.clone()),
-            Value::None => Some(String::from("None")),
+            Value::Array(_val) => unimplemented!(),
         }
+    }
+}
+
+///
+/// Empty tuple
+///
+
+impl From<Value> for () {
+    fn from(src: Value) -> () {
+        if let Value::None = src {
+            ()
+        } else {
+            unimplemented!();
+        }
+    }
+}
+
+
+impl From<()> for Value {
+    fn from(_src: ()) -> Self {
+        Value::None
     }
 }
 
@@ -249,22 +289,40 @@ impl From<&str> for Value {
 }
 
 ///
-/// Empty tuple
+/// Array
 ///
 
-impl From<Value> for () {
-    fn from(src: Value) -> () {
-        if let Value::None = src {
-            ()
-        } else {
-            unimplemented!();
+macro_rules! convert_array_type {
+    ($num_type: ty) => {
+        impl<'rubtle> From<Value> for Vec<$num_type> {
+            fn from(src: Value) -> Vec<$num_type> {
+                if let Value::Array(val) = src {
+                    let mut ary = Vec::new();
+
+                    for v in val {
+                        ary.push(Value::into(v))
+                    }
+
+                    ary
+                } else {
+                    unimplemented!();
+                }
+            }
         }
-    }
+
+        impl<'rubtle> From<&Vec<$num_type>> for Value {
+            fn from(src: &Vec<$num_type>) -> Self {
+                let mut ary = Vec::new();
+
+                for var in src {
+                    ary.push(Value::from(*var))
+                }
+
+                Value::Array(ary)
+            }
+        }
+    };
 }
 
-
-impl From<()> for Value {
-    fn from(_src: ()) -> Self {
-        Value::None
-    }
-}
+convert_array_type!(i32);
+convert_array_type!(f64);

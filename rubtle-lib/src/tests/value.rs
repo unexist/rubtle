@@ -15,6 +15,15 @@ use crate::Value;
 ///
 
 #[test]
+fn create_none_value() {
+    let rval = Value::from(());
+
+    assert!(rval.is_none());
+
+    assert_eq!((), rval.into());
+}
+
+#[test]
 fn create_boolean_value() {
     let val: bool = true;
     let rval = Value::from(val);
@@ -24,8 +33,17 @@ fn create_boolean_value() {
 }
 
 #[test]
-fn create_number_value() {
+fn create_number_value_i32() {
     let val: i32 = 4;
+    let rval = Value::from(val);
+
+    assert!(rval.is_number());
+    assert_eq!(val, rval.into());
+}
+
+#[test]
+fn create_number_value_f64() {
+    let val: f64 = 4.0;
     let rval = Value::from(val);
 
     assert!(rval.is_number());
@@ -44,17 +62,40 @@ fn create_string_value() {
 }
 
 #[test]
-fn create_none_value() {
-    let rval = Value::from(());
+fn create_array_value_i32() {
+    let val = vec![1, 2];
+    let rval = Value::from(&val);
 
-    assert!(rval.is_none());
+    assert!(rval.is_array());
 
-    assert_eq!((), rval.into());
+    let ary: Vec<i32> = rval.into();
+
+    assert_eq!(val, ary.as_slice());
+}
+
+#[test]
+fn create_array_value_f64() {
+    let val = vec![1.0, 2.0];
+    let rval = Value::from(&val);
+
+    assert!(rval.is_array());
+
+    let ary: Vec<f64> = rval.into();
+
+    assert_eq!(val, ary.as_slice());
 }
 
 ///
 /// Convert values
 ///
+
+#[test]
+fn convert_none() {
+    let val = ();
+    let rval = Value::from(val);
+
+    assert_eq!(val, rval.as_none().unwrap());
+}
 
 #[test]
 fn convert_boolean() {
@@ -80,17 +121,18 @@ fn convert_string() {
     assert_eq!(val, rval.as_string().unwrap());
 }
 
-#[test]
-fn convert_none() {
-    let val = ();
-    let rval = Value::from(val);
-
-    assert_eq!(val, rval.as_none().unwrap());
-}
-
 ///
 /// Coerce to string
 ///
+
+#[test]
+fn coerce_none_to_string() {
+    let strval = "None";
+    let val = ();
+    let rval = Value::from(val);
+
+    assert_eq!(strval, rval.coerce_string().unwrap());
+}
 
 #[test]
 fn coerce_bool_to_string() {
@@ -114,15 +156,6 @@ fn coerce_number_to_string() {
 fn coerce_string_to_string() {
     let strval = "Test";
     let val = "Test";
-    let rval = Value::from(val);
-
-    assert_eq!(strval, rval.coerce_string().unwrap());
-}
-
-#[test]
-fn coerce_none_to_string() {
-    let strval = "None";
-    let val = ();
     let rval = Value::from(val);
 
     assert_eq!(strval, rval.coerce_string().unwrap());
