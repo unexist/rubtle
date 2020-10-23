@@ -136,6 +136,36 @@ impl Rubtle {
         self.pop_value_at(-1)
     }
 
+    fn handle_objects(&self) -> Option<Value> {
+        unsafe {
+            /* Handle arrays */
+            if 1 == ffi::duk_is_array(self.ctx, -1) {
+                let mut vec: Vec<Value> = Vec::new();
+
+                ffi::duk_enum(self.ctx, -1, ffi::DUK_ENUM_ARRAY_INDICES_ONLY);
+
+                while 0 != ffi::duk_next(self.ctx, -1, 1) {
+                    match self.pop_value_at(-1) {
+                        Some(val) => {
+                            vec.push(Value::from(val));
+                        },
+                        None => {},
+                    }
+
+                    /* Remove iter */
+                    ffi::duk_pop(self.ctx);
+                }
+
+                /* Remove enum */
+                ffi::duk_pop(self.ctx);
+
+                Some(Value::Array(vec))
+            } else {
+                Some(Value::None)
+            }
+        }
+    }
+
     ///
     /// Pop value on given index from duktape stack
     ///
@@ -192,6 +222,8 @@ impl Rubtle {
                         Err(_) => None,
                     }
                 },
+
+                ffi::DUK_TYPE_OBJECT => self.handle_objects(),
 
                 ffi::DUK_TYPE_UNDEFINED => {
                     Some(Value::None)
