@@ -194,6 +194,24 @@ fn get_global_string_value() {
 }
 
 #[test]
+fn get_global_array_value_bool() {
+    let rubtle = Rubtle::new();
+
+    rubtle.eval(
+        r#"
+        var rubtle = [true, false];
+    "#,
+    );
+
+    let rval = rubtle.get_global_value("rubtle").unwrap();
+
+    let vec = vec![true, false];
+    let rval2 = Value::from(&vec);
+
+    assert_eq!(rval, rval2);
+}
+
+#[test]
 fn get_global_array_value_i32() {
     let rubtle = Rubtle::new();
 
