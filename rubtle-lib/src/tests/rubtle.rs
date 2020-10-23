@@ -193,6 +193,42 @@ fn get_global_string_value() {
     assert_eq!(rval, rval2);
 }
 
+#[test]
+fn get_global_array_value_i32() {
+    let rubtle = Rubtle::new();
+
+    rubtle.eval(
+        r#"
+        var rubtle = [1, 2];
+    "#,
+    );
+
+    let rval = rubtle.get_global_value("rubtle").unwrap();
+
+    let vec = vec![1, 2];
+    let rval2 = Value::from(&vec);
+
+    assert_eq!(rval, rval2);
+}
+
+#[test]
+fn get_global_array_value_f64() {
+    let rubtle = Rubtle::new();
+
+    rubtle.eval(
+        r#"
+        var rubtle = [1.0, 2.0];
+    "#,
+    );
+
+    let rval = rubtle.get_global_value("rubtle").unwrap();
+
+    let vec = vec![1.0, 2.0];
+    let rval2 = Value::from(&vec);
+
+    assert_eq!(rval, rval2);
+}
+
 ///
 /// Global functions
 ///
