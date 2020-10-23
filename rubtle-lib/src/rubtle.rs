@@ -104,6 +104,10 @@ impl Rubtle {
                 Value::None => {
                     ffi::duk_require_stack(self.ctx, 1);
                     ffi::duk_push_undefined(self.ctx);
+                },
+
+                Value::Array(_val) => {
+                    unimplemented!()
                 }
             }
         }
