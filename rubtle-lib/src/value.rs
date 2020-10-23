@@ -327,3 +327,4 @@ macro_rules! convert_array_type {
 convert_array_type!(bool);
 convert_array_type!(i32);
 convert_array_type!(f64);
+convert_array_type!(&'rubtle str);
