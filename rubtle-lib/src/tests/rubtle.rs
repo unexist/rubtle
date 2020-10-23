@@ -146,7 +146,7 @@ fn get_global_bool_value() {
 }
 
 #[test]
-fn get_global_number_value() {
+fn get_global_number_value_i32() {
     let rubtle = Rubtle::new();
 
     rubtle.eval(
@@ -157,6 +157,22 @@ fn get_global_number_value() {
 
     let rval = rubtle.get_global_value("rubtle").unwrap();
     let rval2 = Value::from(4);
+
+    assert_eq!(rval, rval2);
+}
+
+#[test]
+fn get_global_number_value_f64() {
+    let rubtle = Rubtle::new();
+
+    rubtle.eval(
+        r#"
+        var rubtle = 4.0;
+    "#,
+    );
+
+    let rval = rubtle.get_global_value("rubtle").unwrap();
+    let rval2 = Value::from(4.0);
 
     assert_eq!(rval, rval2);
 }
