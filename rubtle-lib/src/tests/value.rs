@@ -85,6 +85,18 @@ fn create_array_value_f64() {
     assert_eq!(val, ary.as_slice());
 }
 
+#[test]
+fn create_array_value_str() {
+    let val = vec!["rubtle", "rubtle"];
+    let rval = Value::from(&val);
+
+    assert!(rval.is_array());
+
+    let ary: Vec<&str> = rval.into();
+
+    assert_eq!(val, ary.as_slice());
+}
+
 ///
 /// Convert values
 ///
