@@ -247,6 +247,24 @@ fn get_global_array_value_f64() {
     assert_eq!(rval, rval2);
 }
 
+#[test]
+fn get_global_array_value_str() {
+    let rubtle = Rubtle::new();
+
+    rubtle.eval(
+        r#"
+        var rubtle = ["rubtle", "rubtle"];
+    "#,
+    );
+
+    let rval = rubtle.get_global_value("rubtle").unwrap();
+
+    let vec = vec!["rubtle", "rubtle"];
+    let rval2 = Value::from(&vec);
+
+    assert_eq!(rval, rval2);
+}
+
 ///
 /// Global functions
 ///

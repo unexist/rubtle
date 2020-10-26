@@ -146,10 +146,8 @@ impl Rubtle {
 
                 while 0 != ffi::duk_next(self.ctx, -1, 1) {
                     match self.pop_value_at(-1) {
-                        Some(val) => {
-                            vec.push(Value::from(val));
-                        },
-                        None => {},
+                        Some(val) => vec.push(Value::from(val)),
+                        None => ffi::duk_pop(self.ctx),
                     }
 
                     /* Remove iter */
@@ -214,6 +212,8 @@ impl Rubtle {
                     let dval = ffi::duk_get_lstring(self.ctx, idx, &mut len);
 
                     assert!(!dval.is_null(), "string is null");
+
+                    ffi::duk_remove(self.ctx, idx);
 
                     let bytes = slice::from_raw_parts(dval as *const u8, len as usize);
 
