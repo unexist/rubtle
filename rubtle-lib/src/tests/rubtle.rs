@@ -96,7 +96,7 @@ fn evil_eval_test() {
 
     rubtle.eval(
         r#"
-        var rubtle = 'yeah';
+        var rubtle = 'rubtle';
     "#,
     );
 }
@@ -410,7 +410,9 @@ fn set_global_object_with_ctor_and_methods() {
         assert(typeof counter != 'undefined', "Damn!");
 
         counter.inc();
-        counter.inc();
+        var value = counter.inc();
+
+        assert(3 == value, "Damn!");
 
         counter.print();
     "#,
