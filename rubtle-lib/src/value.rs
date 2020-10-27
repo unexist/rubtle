@@ -9,6 +9,7 @@
 /// See the file LICENSE for details.
 ///
 use std::convert::From;
+use std::collections::HashMap;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Value {
@@ -17,6 +18,7 @@ pub enum Value {
     Number(f64),
     Str(String),
     Array(Vec<Value>),
+    Object(HashMap<String, Value>),
 }
 
 impl Value {
@@ -102,6 +104,22 @@ impl Value {
     }
 
     ///
+    /// Check whether value is an object
+    ///
+    /// Returns
+    ///
+    /// `true` if the value is an object; otherwise `false`
+    ///
+
+    pub fn is_object(&self) -> bool {
+        if let Value::Object(_) = *self {
+            true
+        } else {
+            false
+        }
+    }
+
+    ///
     /// Return inner none value
     ///
     /// Returns
@@ -180,6 +198,7 @@ impl Value {
             Value::Boolean(val) => Some(val.to_string()),
             Value::Str(val) => Some(val.clone()),
             Value::Array(_val) => unimplemented!(),
+            Value::Object(_val) => unimplemented!(),
         }
     }
 }
@@ -293,9 +312,9 @@ impl From<&str> for Value {
 ///
 
 macro_rules! convert_array_type {
-    ($num_type: ty) => {
-        impl<'rubtle> From<Value> for Vec<$num_type> {
-            fn from(src: Value) -> Vec<$num_type> {
+    ($array_type: ty) => {
+        impl<'rubtle> From<Value> for Vec<$array_type> {
+            fn from(src: Value) -> Vec<$array_type> {
                 if let Value::Array(val) = src {
                     let mut ary = Vec::new();
 
@@ -310,8 +329,8 @@ macro_rules! convert_array_type {
             }
         }
 
-        impl<'rubtle> From<&Vec<$num_type>> for Value {
-            fn from(src: &Vec<$num_type>) -> Self {
+        impl<'rubtle> From<&Vec<$array_type>> for Value {
+            fn from(src: &Vec<$array_type>) -> Self {
                 let mut ary = Vec::new();
 
                 for var in src {
@@ -328,3 +347,43 @@ convert_array_type!(bool);
 convert_array_type!(i32);
 convert_array_type!(f64);
 convert_array_type!(&'rubtle str);
+
+///
+/// Object
+///
+
+macro_rules! convert_object_type {
+    ($obj_type: ty) => {
+        impl<'rubtle> From<Value> for HashMap<String, $obj_type> {
+            fn from(src: Value) -> HashMap<String, $obj_type> {
+                if let Value::Object(val) = src {
+                    let mut hash: HashMap<String, $obj_type> = HashMap::new();
+
+                    for (k, v) in val {
+                        hash.insert(k, v.into());
+                    }
+
+                    hash
+                } else {
+                    unimplemented!();
+                }
+            }
+        }
+
+        impl<'rubtle> From<&HashMap<&'rubtle str, $obj_type>> for Value {
+            fn from(src: &HashMap<&'rubtle str, $obj_type>) -> Self {
+                let mut hash = HashMap::new();
+
+                for (k, v) in src {
+                    hash.insert(k.to_string(), Value::from(*v));
+                }
+
+                Value::Object(hash)
+            }
+        }
+    }
+}
+
+convert_object_type!(bool);
+convert_object_type!(i32);
+convert_object_type!(f64);
