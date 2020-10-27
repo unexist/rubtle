@@ -13,6 +13,7 @@ use std::{process, ptr, slice};
 use std::ffi::{CStr, CString};
 use std::os::raw::{c_char, c_void};
 use std::panic::{catch_unwind, AssertUnwindSafe};
+use std::collections::HashMap;
 
 use cesu8::{from_cesu8, to_cesu8};
 
@@ -162,6 +163,27 @@ impl Rubtle {
                 ffi::duk_pop(self.ctx);
 
                 Some(Value::Array(vec))
+            } else if 1 == ffi::duk_is_object(self.ctx, -1) {
+                let mut hash = HashMap::new();
+
+                ffi::duk_enum(self.ctx, -1, 0);
+
+                while 0 != ffi::duk_next(self.ctx, -1, 1) {
+                    /* Pop value and key in reverse */
+                    let value = self.pop_value_at(-1);
+                    let key = self.pop_value_at(-1);
+
+                    if !key.is_none() && !value.is_none() {
+                        hash.insert(key.unwrap().as_string().unwrap().clone(), value.unwrap());
+                    } else {
+                        ffi::duk_pop_2(self.ctx);
+                    }
+                }
+
+                /* Remove enum */
+                ffi::duk_pop(self.ctx);
+
+                Some(Value::Object(hash))
             } else {
                 Some(Value::None)
             }
