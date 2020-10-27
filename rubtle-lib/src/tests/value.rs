@@ -10,6 +10,8 @@
 ///
 use crate::Value;
 
+use std::collections::HashMap;
+
 ///
 /// Create value
 ///
@@ -61,6 +63,22 @@ fn create_string_value() {
     assert_eq!(val, rval2);
 }
 
+///
+/// Create arrays
+///
+
+#[test]
+fn create_array_value_bool() {
+    let val = vec![true, false];
+    let rval = Value::from(&val);
+
+    assert!(rval.is_array());
+
+    let ary: Vec<bool> = rval.into();
+
+    assert_eq!(val, ary.as_slice());
+}
+
 #[test]
 fn create_array_value_i32() {
     let val = vec![1, 2];
@@ -95,6 +113,67 @@ fn create_array_value_str() {
     let ary: Vec<&str> = rval.into();
 
     assert_eq!(val, ary.as_slice());
+}
+
+///
+/// Create hash
+///
+
+#[test]
+fn create_object_bool() {
+    let mut val = HashMap::new();
+
+    val.insert("rubtle1", true);
+    val.insert("rubtle2", false);
+
+    let rval = Value::from(&val);
+
+    assert!(rval.is_object());
+
+    let hash: HashMap<String, bool> = rval.into();
+
+    for (k, v) in val {
+        assert!(hash.contains_key(k));
+        assert_eq!(v, *hash.get(k).unwrap());
+    }
+}
+
+#[test]
+fn create_object_i32() {
+    let mut val = HashMap::new();
+
+    val.insert("rubtle1", 1);
+    val.insert("rubtle2", 2);
+
+    let rval = Value::from(&val);
+
+    assert!(rval.is_object());
+
+    let hash: HashMap<String, i32> = rval.into();
+
+    for (k, v) in val {
+        assert!(hash.contains_key(k));
+        assert_eq!(v, *hash.get(k).unwrap());
+    }
+}
+
+#[test]
+fn create_object_f64() {
+    let mut val = HashMap::new();
+
+    val.insert("rubtle1", 1.0);
+    val.insert("rubtle2", 2.0);
+
+    let rval = Value::from(&val);
+
+    assert!(rval.is_object());
+
+    let hash: HashMap<String, f64> = rval.into();
+
+    for (k, v) in val {
+        assert!(hash.contains_key(k));
+        assert_eq!(v, *hash.get(k).unwrap());
+    }
 }
 
 ///

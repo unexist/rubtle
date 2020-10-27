@@ -107,7 +107,11 @@ impl Rubtle {
                 },
 
                 Value::Array(_val) => {
-                    unimplemented!()
+                    unimplemented!();
+                },
+
+                Value::Object(_val) => {
+                    unimplemented!();
                 }
             }
         }
