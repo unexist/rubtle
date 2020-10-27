@@ -10,6 +10,8 @@
 ///
 use crate::{Invocation, ObjectBuilder, Result, Rubtle, Value};
 
+use std::collections::HashMap;
+
 ///
 /// Helper functions
 ///
@@ -193,6 +195,10 @@ fn get_global_string_value() {
     assert_eq!(rval, rval2);
 }
 
+///
+/// Global arrays
+///
+
 #[test]
 fn get_global_array_value_bool() {
     let rubtle = Rubtle::new();
@@ -261,6 +267,76 @@ fn get_global_array_value_str() {
 
     let vec = vec!["rubtle", "rubtle"];
     let rval2 = Value::from(&vec);
+
+    assert_eq!(rval, rval2);
+}
+
+///
+/// Global arrays
+///
+
+#[test]
+fn get_global_object_value_bool() {
+    let rubtle = Rubtle::new();
+
+    rubtle.eval(
+        r#"
+        var rubtle = { "rubtle1": true, "rubtle2": false };
+    "#,
+    );
+
+    let rval = rubtle.get_global_value("rubtle").unwrap();
+
+    let mut hash: HashMap<&str, bool> = HashMap::new();
+
+    hash.insert("rubtle1", true);
+    hash.insert("rubtle2", false);
+
+    let rval2 = Value::from(&hash);
+
+    assert_eq!(rval, rval2);
+}
+
+#[test]
+fn get_global_object_value_i32() {
+    let rubtle = Rubtle::new();
+
+    rubtle.eval(
+        r#"
+        var rubtle = { "rubtle1": 1, "rubtle2": 2 };
+    "#,
+    );
+
+    let rval = rubtle.get_global_value("rubtle").unwrap();
+
+    let mut hash: HashMap<&str, i32> = HashMap::new();
+
+    hash.insert("rubtle1", 1);
+    hash.insert("rubtle2", 2);
+
+    let rval2 = Value::from(&hash);
+
+    assert_eq!(rval, rval2);
+}
+
+#[test]
+fn get_global_object_value_f64() {
+    let rubtle = Rubtle::new();
+
+    rubtle.eval(
+        r#"
+        var rubtle = { "rubtle1": 1.0, "rubtle2": 2.0 };
+    "#,
+    );
+
+    let rval = rubtle.get_global_value("rubtle").unwrap();
+
+    let mut hash: HashMap<&str, f64> = HashMap::new();
+
+    hash.insert("rubtle1", 1.0);
+    hash.insert("rubtle2", 2.0);
+
+    let rval2 = Value::from(&hash);
 
     assert_eq!(rval, rval2);
 }
