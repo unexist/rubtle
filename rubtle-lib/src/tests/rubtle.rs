@@ -47,6 +47,7 @@ fn js_assert(inv: Invocation<i8>) -> Result<Value> {
 #[test]
 fn push_and_pop_bool_value() {
     let rubtle = Rubtle::new();
+
     let rval = Value::from(true);
 
     rubtle.push_value(&rval);
@@ -58,6 +59,7 @@ fn push_and_pop_bool_value() {
 #[test]
 fn push_and_pop_number_value() {
     let rubtle = Rubtle::new();
+
     let rval = Value::from(4);
 
     rubtle.push_value(&rval);
@@ -69,6 +71,7 @@ fn push_and_pop_number_value() {
 #[test]
 fn push_and_pop_string_value() {
     let rubtle = Rubtle::new();
+
     let rval = Value::from("rubtle");
 
     rubtle.push_value(&rval);
@@ -80,6 +83,7 @@ fn push_and_pop_string_value() {
 #[test]
 fn push_and_pop_none_value() {
     let rubtle = Rubtle::new();
+
     let rval = Value::from(());
 
     rubtle.push_value(&rval);
@@ -87,6 +91,46 @@ fn push_and_pop_none_value() {
 
     assert_eq!(rval, rval2);
 }
+
+#[test]
+fn push_and_pop_array_value_i32() {
+    let rubtle = Rubtle::new();
+
+    let ary: Vec<i32> = vec![1, 2];
+    let rval = Value::from(&ary);
+
+    rubtle.push_value(&rval);
+    let rval2 = rubtle.pop_value().unwrap();
+
+    assert_eq!(rval, rval2);
+}
+
+#[test]
+fn push_and_pop_array_value_f64() {
+    let rubtle = Rubtle::new();
+
+    let ary: Vec<f64> = vec![1.0, 2.0];
+    let rval = Value::from(&ary);
+
+    rubtle.push_value(&rval);
+    let rval2 = rubtle.pop_value().unwrap();
+
+    assert_eq!(rval, rval2);
+}
+
+#[test]
+fn push_and_pop_array_value_bool() {
+    let rubtle = Rubtle::new();
+
+    let ary: Vec<bool> = vec![true, false];
+    let rval = Value::from(&ary);
+
+    rubtle.push_value(&rval);
+    let rval2 = rubtle.pop_value().unwrap();
+
+    assert_eq!(rval, rval2);
+}
+
 
 ///
 /// Eval

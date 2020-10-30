@@ -201,6 +201,15 @@ impl Value {
             Value::Object(_val) => unimplemented!(),
         }
     }
+
+    pub fn values(&self) -> impl Iterator<Item = &Value> {
+        match self {
+            Value::Array(val) => {
+                val.iter()
+            },
+            _ => unimplemented!(),
+        }
+    }
 }
 
 ///
@@ -216,7 +225,6 @@ impl From<Value> for () {
         }
     }
 }
-
 
 impl From<()> for Value {
     fn from(_src: ()) -> Self {

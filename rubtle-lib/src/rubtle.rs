@@ -107,8 +107,15 @@ impl Rubtle {
                     ffi::duk_push_undefined(self.ctx);
                 },
 
-                Value::Array(_val) => {
-                    unimplemented!();
+                Value::Array(val) => {
+                    let ary_idx = ffi::duk_push_array(self.ctx);
+                    let mut pos = 0;
+
+                    for v in val {
+                        self.push_value(v);
+                        ffi::duk_put_prop_index(self.ctx, ary_idx, pos);
+                        pos += 1;
+                    }
                 },
 
                 Value::Object(_val) => {
