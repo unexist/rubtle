@@ -118,8 +118,25 @@ impl Rubtle {
                     }
                 },
 
-                Value::Object(_val) => {
-                    unimplemented!();
+                Value::Object(val) => {
+                    let obj_idx = ffi::duk_push_object(self.ctx);
+
+                    for (k, v) in val {
+                        let cstr = CString::new(to_cesu8(&k[..]));
+
+                        match cstr {
+                            Ok(cval) => {
+                                self.push_value(v);
+                                ffi::duk_put_prop_lstring(
+                                    self.ctx,
+                                    obj_idx,
+                                    cval.as_ptr(),
+                                    cval.as_bytes().len() as u64,
+                                );
+                            }
+                            Err(_) => unimplemented!(),
+                        }
+                    }
                 }
             }
         }
