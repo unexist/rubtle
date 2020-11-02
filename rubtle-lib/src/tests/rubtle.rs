@@ -41,7 +41,7 @@ fn js_assert(inv: Invocation<i8>) -> Result<Value> {
 }
 
 ///
-/// Stack
+/// Stack primitives
 ///
 
 #[test]
@@ -92,6 +92,10 @@ fn push_and_pop_none_value() {
     assert_eq!(rval, rval2);
 }
 
+///
+/// Stack arrays
+///
+
 #[test]
 fn push_and_pop_array_value_i32() {
     let rubtle = Rubtle::new();
@@ -131,6 +135,60 @@ fn push_and_pop_array_value_bool() {
     assert_eq!(rval, rval2);
 }
 
+///
+/// Stack objects
+///
+
+#[test]
+fn push_and_pop_object_i32() {
+    let rubtle = Rubtle::new();
+
+    let mut hash: HashMap<&str, i32> = HashMap::new();
+
+    hash.insert("rubtle", 1);
+    hash.insert("rubtle", 2);
+
+    let rval = Value::from(&hash);
+
+    rubtle.push_value(&rval);
+    let rval2 = rubtle.pop_value().unwrap();
+
+    assert_eq!(rval, rval2);
+}
+
+#[test]
+fn push_and_pop_object_f64() {
+    let rubtle = Rubtle::new();
+
+    let mut hash: HashMap<&str, f64> = HashMap::new();
+
+    hash.insert("rubtle", 1.0);
+    hash.insert("rubtle", 2.0);
+
+    let rval = Value::from(&hash);
+
+    rubtle.push_value(&rval);
+    let rval2 = rubtle.pop_value().unwrap();
+
+    assert_eq!(rval, rval2);
+}
+
+#[test]
+fn push_and_pop_object_bool() {
+    let rubtle = Rubtle::new();
+
+    let mut hash: HashMap<&str, bool> = HashMap::new();
+
+    hash.insert("rubtle", true);
+    hash.insert("rubtle", false);
+
+    let rval = Value::from(&hash);
+
+    rubtle.push_value(&rval);
+    let rval2 = rubtle.pop_value().unwrap();
+
+    assert_eq!(rval, rval2);
+}
 
 ///
 /// Eval
