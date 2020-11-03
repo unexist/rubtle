@@ -443,6 +443,28 @@ fn get_global_object_value_f64() {
     assert_eq!(rval, rval2);
 }
 
+#[test]
+fn get_global_object_value_str() {
+    let rubtle = Rubtle::new();
+
+    rubtle.eval(
+        r#"
+        var rubtle = { "rubtle1": "rubtle", "rubtle2": "rubtle" };
+    "#,
+    );
+
+    let rval = rubtle.get_global_value("rubtle").unwrap();
+
+    let mut hash: HashMap<&str, &str> = HashMap::new();
+
+    hash.insert("rubtle1", "rubtle");
+    hash.insert("rubtle2", "rubtle");
+
+    let rval2 = Value::from(&hash);
+
+    assert_eq!(rval, rval2);
+}
+
 ///
 /// Global functions
 ///

@@ -176,6 +176,25 @@ fn create_object_f64() {
     }
 }
 
+#[test]
+fn create_object_str() {
+    let mut val = HashMap::new();
+
+    val.insert("rubtle1", "rubtle");
+    val.insert("rubtle2", "rubtle");
+
+    let rval = Value::from(&val);
+
+    assert!(rval.is_object());
+
+    let hash: HashMap<String, &str> = rval.into();
+
+    for (k, v) in val {
+        assert!(hash.contains_key(k));
+        assert_eq!(v, *hash.get(k).unwrap());
+    }
+}
+
 ///
 /// Convert values
 ///

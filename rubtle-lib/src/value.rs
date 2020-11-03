@@ -395,3 +395,4 @@ macro_rules! convert_object_type {
 convert_object_type!(bool);
 convert_object_type!(i32);
 convert_object_type!(f64);
+convert_object_type!(&'rubtle str);
