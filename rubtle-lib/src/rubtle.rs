@@ -179,7 +179,7 @@ impl Rubtle {
                         None => ffi::duk_pop(self.ctx),
                     }
 
-                    /* Remove iter */
+                    /* Remove iter from stack*/
                     ffi::duk_pop(self.ctx);
                 }
 
@@ -261,7 +261,7 @@ impl Rubtle {
 
                     let dval = ffi::duk_get_lstring(self.ctx, idx, &mut len);
 
-                    assert!(!dval.is_null(), "string is null");
+                    assert!(!dval.is_null(), "String is null");
 
                     ffi::duk_remove(self.ctx, idx);
 
@@ -405,7 +405,7 @@ impl Rubtle {
 
                 match rubtle.pop_value() {
                     Some(val) => args.push(val),
-                    None => eprintln!("Unwrap of None value"),
+                    None => eprintln!("Unwrap of none value"),
                 }
             }
 
@@ -427,7 +427,7 @@ impl Rubtle {
             let result = match catch_unwind(AssertUnwindSafe(wrapped_func)) {
                 Ok(result) => result,
                 Err(_) => {
-                    ffi::duk_fatal_raw(ctx, cstr!("fatal error on func call"));
+                    ffi::duk_fatal_raw(ctx, cstr!("Fatal error on func call"));
                     unreachable!();
                 }
             };
@@ -742,7 +742,7 @@ impl Rubtle {
                         | ffi::DUK_COMPILE_NOFILENAME,
                 );
             },
-            Err(e) => eprintln!("couldn't eval str {}: {}", str_val, e),
+            Err(e) => eprintln!("Cannot eval str '{}': {}", str_val, e),
         }
     }
 
@@ -773,9 +773,9 @@ impl Rubtle {
 unsafe extern "C" fn fatal_handler(_udata: *mut c_void, msg: *const c_char) {
     let msg = from_cesu8(CStr::from_ptr(msg).to_bytes())
         .map(|c| c.into_owned())
-        .unwrap_or_else(|_| "failed to decode message".to_string());
+        .unwrap_or_else(|_| "Failed to decode message".to_string());
 
-    eprintln!("fatal error from duktape: {}", msg);
+    eprintln!("Fatal error from duktape: {}", msg);
 
     process::abort();
 }
