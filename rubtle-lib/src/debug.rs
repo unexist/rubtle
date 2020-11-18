@@ -2,7 +2,7 @@
 /// @package Rubtle-Lib
 ///
 /// @file Debug functions
-/// @copyright 2020 Christoph Kappel <unexist@subforge.org>
+/// @copyright 2020 Christoph Kappel <christoph@unexist.dev>
 /// @version $Id$
 ///
 /// This program can be distributed under the terms of the GNU GPLv2.
