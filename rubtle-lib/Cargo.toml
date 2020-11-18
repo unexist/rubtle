@@ -8,7 +8,7 @@ authors = [
 edition = "2018"
 #license = "GPLv2"
 license-file = "LICENSE"
-homepage = "https://subforge.org"
+homepage = "https://unexist.dev"
 repository = "https://hg.unexist.dev/rubtle"
 
 [dependencies]
