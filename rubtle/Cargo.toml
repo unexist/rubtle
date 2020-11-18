@@ -3,13 +3,13 @@ name = "rubtle"
 version = "0.1.0"
 description = "Rubtle main"
 authors = [
-    "Christoph Kappel <unexist@subforge.org>"
+    "Christoph Kappel <christoph@unexist.dev>"
 ]
 edition = "2018"
 #license = "GPLv2"
 license-file = "LICENSE"
 homepage = "https://subforge.org"
-repository = "https://hg.subforge.org/rubtle"
+repository = "https://hg.unexist.dev/rubtle"
 
 [dependencies.rubtle-lib]
 version = "0.1.0"
