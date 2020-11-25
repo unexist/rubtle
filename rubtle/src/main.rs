@@ -10,9 +10,77 @@
 ///
 extern crate rubtle_lib as rubtle;
 
-use rubtle::Rubtle;
+use rubtle::{Rubtle, ObjectBuilder, Invocation, Value, Result};
 
 use std::{env, fs};
+
+fn js_printer(inv: Invocation<i8>) -> Result<Value> {
+    let args = inv.args.unwrap();
+
+    for val in args.iter() {
+        match val.coerce_string() {
+            Some(s) => println!("<JS> {:?}", s),
+            None => eprintln!("Error unwrap value"),
+        }
+    }
+
+    Ok(Value::from(true))
+}
+
+fn js_assert_eq(inv: Invocation<i8>) -> Result<Value> {
+    let args = inv.args.unwrap();
+    let assert_a = args.first().unwrap();
+    let assert_b = args.get(1).unwrap();
+    let assert_mesg = args.last().unwrap().coerce_string().unwrap();
+
+    assert_eq!(assert_a, assert_b, "<ASSERT> {}", assert_mesg);
+
+    /* Make compiler happy */
+    Ok(Value::from(true))
+}
+
+fn initialize(rubtle: &Rubtle) {
+    #[derive(Default)]
+    struct UserData {
+        value: i32,
+    };
+
+    let mut object = ObjectBuilder::<UserData>::new()
+        .with_constructor(|inv| {
+            let mut udata = inv.udata.as_mut().unwrap();
+
+            udata.value = 1;
+        })
+        .with_method("inc", |inv| -> Result<Value> {
+            let mut udata = inv.udata.as_mut().unwrap();
+
+            udata.value += 1;
+
+            Ok(Value::from(udata.value))
+        })
+        .with_method("set", |inv| -> Result<Value> {
+            let mut udata = inv.udata.as_mut().unwrap();
+            let args = inv.args.as_ref().unwrap();
+
+            match args.first() {
+                Some(val) => udata.value = val.as_number().unwrap() as i32,
+                None => udata.value = 1,
+            }
+
+            Ok(Value::from(udata.value))
+        })
+        .with_method("get", |inv| -> Result<Value> {
+            let udata = inv.udata.as_mut().unwrap();
+
+            Ok(Value::from(udata.value))
+        })
+        .build();
+
+    rubtle.set_global_object("Rubtle", &mut object);
+
+    rubtle.set_global_function("print", js_printer);
+    rubtle.set_global_function("assert", js_assert_eq);
+}
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -22,7 +90,11 @@ fn main() {
 
         println!("{:?}", contents);
 
-        let _rubtle = Rubtle::new();
+        let rubtle = Rubtle::new();
+
+        initialize(&rubtle);
+
+        rubtle.eval(&contents.unwrap());
     } else {
         println!("Usage: {}: <JSFile>", args[0]);
     }
