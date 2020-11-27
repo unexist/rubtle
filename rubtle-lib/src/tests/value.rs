@@ -205,7 +205,7 @@ fn create_function_value() {
         Ok(Value::from(inv.args.unwrap().first().unwrap().as_number().unwrap() + 1 as f64))
     };
 
-    let rval = Value::from(Function::from(Box::new(val)));
+    let rval = Value::from(Function::from(val));
 
     assert!(rval.is_function());
 }
