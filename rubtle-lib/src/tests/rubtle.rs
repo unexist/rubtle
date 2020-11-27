@@ -8,7 +8,8 @@
 /// This program can be distributed under the terms of the GNU GPLv2.
 /// See the file LICENSE for details.
 ///
-use crate::{Invocation, ObjectBuilder, Result, Rubtle, Value};
+use crate::{Invocation, ObjectBuilder, Rubtle, Value};
+use crate::types::CallbackResult;
 
 use std::collections::HashMap;
 
@@ -16,7 +17,7 @@ use std::collections::HashMap;
 /// Helper functions
 ///
 
-fn js_printer(inv: Invocation<i8>) -> Result<Value> {
+fn js_printer(inv: Invocation<i8>) -> CallbackResult<Value> {
     let args = inv.args.unwrap();
 
     for val in args.iter() {
@@ -29,7 +30,7 @@ fn js_printer(inv: Invocation<i8>) -> Result<Value> {
     Ok(Value::from(true))
 }
 
-fn js_assert(inv: Invocation<i8>) -> Result<Value> {
+fn js_assert(inv: Invocation<i8>) -> CallbackResult<Value> {
     let args = inv.args.unwrap();
     let assert_val = args.first().unwrap().as_boolean().unwrap();
     let assert_mesg = args.last().unwrap().coerce_string().unwrap();
@@ -473,7 +474,7 @@ fn get_global_object_value_str() {
 fn set_global_function_as_closure() {
     let rubtle = Rubtle::new();
 
-    rubtle.set_global_function("square", |inv| -> Result<Value> {
+    rubtle.set_global_function("square", |inv| -> CallbackResult<Value> {
         let args = inv.args.unwrap();
 
         let i = args.first().unwrap().as_number().unwrap();
@@ -542,7 +543,7 @@ fn set_global_object_with_ctor_and_method() {
 
             udata.value = 1;
         })
-        .with_method("inc", |inv| -> Result<Value> {
+        .with_method("inc", |inv| -> CallbackResult<Value> {
             let mut udata = inv.udata.as_mut().unwrap();
 
             udata.value += 1;
@@ -581,14 +582,14 @@ fn set_global_object_with_ctor_and_methods() {
 
             udata.value = 1;
         })
-        .with_method("inc", |inv| -> Result<Value> {
+        .with_method("inc", |inv| -> CallbackResult<Value> {
             let mut udata = inv.udata.as_mut().unwrap();
 
             udata.value += 1;
 
             Ok(Value::from(udata.value))
         })
-        .with_method("print", |inv| -> Result<Value> {
+        .with_method("print", |inv| -> CallbackResult<Value> {
             let udata = inv.udata.as_ref().unwrap();
 
             println!("Value={}", udata.value);
@@ -632,7 +633,7 @@ fn set_global_object_with_ctor_and_method_with_return_value() {
 
             udata.value = 1;
         })
-        .with_method("inc", |inv| -> Result<Value> {
+        .with_method("inc", |inv| -> CallbackResult<Value> {
             let mut udata = inv.udata.as_mut().unwrap();
 
             udata.value += 1;
@@ -682,7 +683,7 @@ fn set_global_object_with_ctor_with_arguments_and_method_with_return_value() {
                 None => udata.value = 1,
             }
         })
-        .with_method("inc", |inv| -> Result<Value> {
+        .with_method("inc", |inv| -> CallbackResult<Value> {
             let mut udata = inv.udata.as_mut().unwrap();
 
             udata.value += 1;
@@ -727,7 +728,7 @@ fn set_global_object_with_ctor_with_arguments_and_method_with_arguments_and_retu
                 None => udata.value = 1,
             }
         })
-        .with_method("inc", |inv| -> Result<Value> {
+        .with_method("inc", |inv| -> CallbackResult<Value> {
             let mut udata = inv.udata.as_mut().unwrap();
             let args = inv.args.as_ref().unwrap();
 

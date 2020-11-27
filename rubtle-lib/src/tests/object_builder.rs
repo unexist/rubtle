@@ -9,7 +9,8 @@
 /// See the file LICENSE for details.
 ///
 
-use crate::{Result, Value, ObjectBuilder};
+use crate::{Value, ObjectBuilder};
+use crate::types::CallbackResult;
 
 #[derive(Default)]
 struct UserData {
@@ -45,17 +46,13 @@ fn create_object_builder_object_take_ctor() {
 #[test]
 fn create_object_builder_object_iter() {
     let object = ObjectBuilder::<UserData>::new()
-        .with_method("print1", |inv| -> Result<Value> {
+        .with_method("print1", |inv| -> CallbackResult<Value> {
             let udata = inv.udata.as_ref().unwrap();
-
-            println!("{}", udata.value);
 
             Ok(Value::from(udata.value))
         })
-        .with_method("print2", |inv| -> Result<Value> {
+        .with_method("print2", |inv| -> CallbackResult<Value> {
             let udata = inv.udata.as_ref().unwrap();
-
-            println!("{}", udata.value);
 
             Ok(Value::from(udata.value))
         })
@@ -63,9 +60,8 @@ fn create_object_builder_object_iter() {
 
     let mut i = 0;
 
-    for (name, _meth) in object {
+    for (_name, _meth) in object {
         i += 1;
-        println!("{}", name);
     }
 
     assert_eq!(i, 2);
@@ -90,7 +86,7 @@ fn create_builder_with_method() {
 
             udata.value = 1;
         })
-        .with_method("increment", |inv| -> Result<Value> {
+        .with_method("increment", |inv| -> CallbackResult<Value> {
             let mut udata = inv.udata.as_mut().unwrap();
 
             udata.value += 1;

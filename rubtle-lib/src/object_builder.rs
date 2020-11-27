@@ -10,13 +10,13 @@
 //
 use std::collections::HashMap;
 
-use crate::{Result, Value, Invocation};
-use crate::types::{ObjectBuilderCtor, ObjectBuilderCall};
+use crate::{Value, Invocation};
+use crate::types::{ObjectBuilderCtor, ObjectBuilderCallback, CallbackResult};
 
 #[derive(Default)]
 pub struct Object<T> {
     ctor: Option<ObjectBuilderCtor<T>>,
-    methods: HashMap<&'static str, ObjectBuilderCall<T>>,
+    methods: HashMap<&'static str, ObjectBuilderCallback<T>>,
 }
 
 impl<T> Object<T>
@@ -27,7 +27,7 @@ where
         !self.methods.is_empty() && self.methods.contains_key(meth_name)
     }
 
-    pub fn take_method(&mut self, meth_name: &str) -> Option<ObjectBuilderCall<T>> {
+    pub fn take_method(&mut self, meth_name: &str) -> Option<ObjectBuilderCallback<T>> {
         self.methods.remove(meth_name)
     }
 
@@ -42,7 +42,7 @@ where
 }
 
 impl<T> Iterator for Object<T> {
-    type Item = (&'static str, ObjectBuilderCall<T>);
+    type Item = (&'static str, ObjectBuilderCallback<T>);
 
     fn next(&mut self) -> Option<Self::Item> {
         match self.methods.keys().last() {
@@ -54,7 +54,7 @@ impl<T> Iterator for Object<T> {
 
 pub struct ObjectBuilder<T> {
     ctor: Option<ObjectBuilderCtor<T>>,
-    methods: HashMap<&'static str, ObjectBuilderCall<T>>,
+    methods: HashMap<&'static str, ObjectBuilderCallback<T>>,
 }
 
 impl<T> ObjectBuilder<T>
@@ -79,10 +79,10 @@ where
 
     pub fn with_method<'a, F>(&'a mut self, name: &'static str, func: F) -> &'a mut ObjectBuilder<T>
     where
-        F: 'static + FnMut(&mut Invocation<T>) -> Result<Value>,
+        F: 'static + FnMut(&mut Invocation<T>) -> CallbackResult<Value>,
     {
         self.methods
-            .insert(name, Box::new(func) as ObjectBuilderCall<T>);
+            .insert(name, Box::new(func) as ObjectBuilderCallback<T>);
 
         self
     }

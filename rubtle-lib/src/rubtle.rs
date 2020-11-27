@@ -18,8 +18,8 @@ use std::collections::HashMap;
 use cesu8::{from_cesu8, to_cesu8};
 
 use crate::object_builder::Object;
-use crate::types::{Callback, ObjectBuilderCall, ObjectBuilderCtor};
-use crate::{Invocation, Result, Value};
+use crate::types::{Callback, CallbackResult, ObjectBuilderCallback, ObjectBuilderCtor};
+use crate::{Invocation, Value};
 
 #[allow(unused_imports)]
 use crate::debug::*;
@@ -137,6 +137,10 @@ impl Rubtle {
                             Err(_) => unimplemented!(),
                         }
                     }
+                },
+
+                Value::Function(_) => {
+                    unimplemented!();
                 }
             }
         }
@@ -371,11 +375,11 @@ impl Rubtle {
     ///
     /// # Example
     ///
-    ///     use rubtle_lib::{Rubtle, Value, Invocation, Result};
+    ///     use rubtle_lib::{Rubtle, Value, Invocation, CallbackResult};
     ///
     ///     let rubtle = Rubtle::new();
     ///
-    ///     let printer = |inv: Invocation<i8>| -> Result<Value> {
+    ///     let printer = |inv: Invocation<i8>| -> CallbackResult<Value> {
     ///         let args = inv.args.unwrap();
     ///         let s = args.first().unwrap();
     ///
@@ -389,7 +393,7 @@ impl Rubtle {
 
     pub fn set_global_function<F>(&self, name: &str, func: F)
     where
-        F: 'static + Fn(Invocation<i8>) -> Result<Value>,
+        F: 'static + Fn(Invocation<i8>) -> CallbackResult<Value>,
     {
         unsafe extern "C" fn wrapper<T>(ctx: *mut ffi::duk_context) -> ffi::duk_ret_t {
             /* Get arguments from stack */
@@ -499,7 +503,7 @@ impl Rubtle {
     ///
     /// # Example
     ///
-    ///     use rubtle_lib::{Rubtle, Result, Value, ObjectBuilder};
+    ///     use rubtle_lib::{Rubtle, Value, ObjectBuilder};
     ///
     ///     let rubtle = Rubtle::new();
     ///
@@ -615,7 +619,7 @@ impl Rubtle {
             /* Fetch pointer from duktape */
             ffi::duk_push_current_function(ctx);
             ffi::duk_get_prop_string(ctx, -1, METH.as_ptr() as *const _);
-            let func_ptr = ffi::duk_get_pointer(ctx, -1) as *mut ObjectBuilderCall<T>;
+            let func_ptr = ffi::duk_get_pointer(ctx, -1) as *mut ObjectBuilderCallback<T>;
             ffi::duk_pop_n(ctx, 2);
 
             assert!(!func_ptr.is_null(), "Null function pointer");

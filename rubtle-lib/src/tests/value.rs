@@ -8,7 +8,7 @@
 /// This program can be distributed under the terms of the GNU GPLv2.
 /// See the file LICENSE for details.
 ///
-use crate::Value;
+use crate::{Value, Invocation, CallbackResult, Function};
 
 use std::collections::HashMap;
 
@@ -193,6 +193,21 @@ fn create_object_str() {
         assert!(hash.contains_key(k));
         assert_eq!(v, *hash.get(k).unwrap());
     }
+}
+
+///
+/// Create function
+///
+
+#[test]
+fn create_function_value() {
+    let val = |inv: Invocation<i8>| -> CallbackResult<Value> {
+        Ok(Value::from(inv.args.unwrap().first().unwrap().as_number().unwrap() + 1 as f64))
+    };
+
+    let rval = Value::from(Function::from(Box::new(val)));
+
+    assert!(rval.is_function());
 }
 
 ///

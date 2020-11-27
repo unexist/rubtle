@@ -11,6 +11,8 @@
 use std::convert::From;
 use std::collections::HashMap;
 
+use crate::function::Function;
+
 #[derive(Debug, Clone, PartialEq)]
 pub enum Value {
     None,
@@ -19,6 +21,7 @@ pub enum Value {
     Str(String),
     Array(Vec<Value>),
     Object(HashMap<String, Value>),
+    Function(Function<i8>),
 }
 
 impl Value {
@@ -120,6 +123,22 @@ impl Value {
     }
 
     ///
+    /// Check whether value is a string
+    ///
+    /// Returns
+    ///
+    /// `true` if the value is a function; otherwise `false`
+    ///
+
+    pub fn is_function(&self) -> bool {
+        if let Value::Function(_) = *self {
+            true
+        } else {
+            false
+        }
+    }
+
+    ///
     /// Return inner none value
     ///
     /// Returns
@@ -197,8 +216,9 @@ impl Value {
             Value::Number(val) => Some(val.to_string()),
             Value::Boolean(val) => Some(val.to_string()),
             Value::Str(val) => Some(val.clone()),
-            Value::Array(_val) => unimplemented!(),
-            Value::Object(_val) => unimplemented!(),
+            Value::Array(_) => Some(String::from("Array")),
+            Value::Object(_) => Some(String::from("Object")),
+            Value::Function(_) => Some(String::from("Function")),
         }
     }
 }
@@ -387,3 +407,23 @@ convert_object_type!(bool);
 convert_object_type!(i32);
 convert_object_type!(f64);
 convert_object_type!(&'rubtle str);
+
+///
+/// Function
+///
+
+impl From<Value> for Function<i8> {
+    fn from(src: Value) -> Function<i8> {
+        if let Value::Function(val) = src {
+            val
+        } else {
+            unimplemented!();
+        }
+    }
+}
+
+impl From<Function<i8>> for Value {
+    fn from(src: Function<i8>) -> Self {
+        Value::Function(src)
+    }
+}

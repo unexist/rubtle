@@ -21,6 +21,7 @@ mod object_builder;
 mod rubtle;
 mod types;
 mod value;
+mod function;
 
 #[cfg(test)]
 mod tests;
@@ -29,5 +30,6 @@ pub use error::Error;
 pub use invocation::Invocation;
 pub use object_builder::{Object, ObjectBuilder};
 pub use rubtle::Rubtle;
-pub use types::{Callback, Result};
+pub use types::{Callback, CallbackResult};
 pub use value::Value;
+pub use function::Function;
