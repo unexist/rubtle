@@ -14,6 +14,10 @@ use rubtle::{Rubtle, ObjectBuilder, Invocation, Value, CallbackResult};
 
 use std::{env, fs};
 
+///
+/// Helper
+///
+
 fn js_printer(inv: Invocation<i8>) -> CallbackResult<Value> {
     let args = inv.args.unwrap();
 
@@ -38,6 +42,10 @@ fn js_assert_eq(inv: Invocation<i8>) -> CallbackResult<Value> {
     /* Make compiler happy */
     Ok(Value::from(true))
 }
+
+///
+/// Init
+///
 
 fn init_global(rubtle: &Rubtle) {
     rubtle.set_global_function("print", js_printer);
@@ -83,6 +91,10 @@ fn init_rubtle(rubtle: &Rubtle) {
 
     rubtle.set_global_object("Rubtle", &mut object);
 }
+
+///
+/// Main
+///
 
 fn main() {
     let args: Vec<String> = env::args().collect();
