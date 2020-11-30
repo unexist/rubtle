@@ -39,7 +39,12 @@ fn js_assert_eq(inv: Invocation<i8>) -> CallbackResult<Value> {
     Ok(Value::from(true))
 }
 
-fn initialize(rubtle: &Rubtle) {
+fn init_global(rubtle: &Rubtle) {
+    rubtle.set_global_function("print", js_printer);
+    rubtle.set_global_function("assert", js_assert_eq);
+}
+
+fn init_rubtle(rubtle: &Rubtle) {
     #[derive(Default)]
     struct UserData {
         value: i32,
@@ -77,9 +82,6 @@ fn initialize(rubtle: &Rubtle) {
         .build();
 
     rubtle.set_global_object("Rubtle", &mut object);
-
-    rubtle.set_global_function("print", js_printer);
-    rubtle.set_global_function("assert", js_assert_eq);
 }
 
 fn main() {
@@ -87,14 +89,15 @@ fn main() {
 
     if 1 < args.len() {
         let contents = fs::read_to_string(&args[1]);
-
-        println!("{:?}", contents);
-
         let rubtle = Rubtle::new();
 
-        initialize(&rubtle);
+        init_global(&rubtle);
+        init_rubtle(&rubtle);
 
-        rubtle.eval(&contents.unwrap());
+        match contents {
+            Ok(val) => rubtle.eval(&val),
+            Err(_) => eprintln!("File read failed"),
+        }
     } else {
         println!("Usage: {}: <JSFile>", args[0]);
     }
