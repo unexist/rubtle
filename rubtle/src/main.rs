@@ -10,11 +10,11 @@
 ///
 extern crate rubtle_lib as rubtle;
 
-use rubtle::{Rubtle, ObjectBuilder, Invocation, Value, Result};
+use rubtle::{Rubtle, ObjectBuilder, Invocation, Value, CallbackResult};
 
 use std::{env, fs};
 
-fn js_printer(inv: Invocation<i8>) -> Result<Value> {
+fn js_printer(inv: Invocation<i8>) -> CallbackResult<Value> {
     let args = inv.args.unwrap();
 
     for val in args.iter() {
@@ -27,7 +27,7 @@ fn js_printer(inv: Invocation<i8>) -> Result<Value> {
     Ok(Value::from(true))
 }
 
-fn js_assert_eq(inv: Invocation<i8>) -> Result<Value> {
+fn js_assert_eq(inv: Invocation<i8>) -> CallbackResult<Value> {
     let args = inv.args.unwrap();
     let assert_a = args.first().unwrap();
     let assert_b = args.get(1).unwrap();
@@ -51,14 +51,14 @@ fn initialize(rubtle: &Rubtle) {
 
             udata.value = 1;
         })
-        .with_method("inc", |inv| -> Result<Value> {
+        .with_method("inc", |inv| -> CallbackResult<Value> {
             let mut udata = inv.udata.as_mut().unwrap();
 
             udata.value += 1;
 
             Ok(Value::from(udata.value))
         })
-        .with_method("set", |inv| -> Result<Value> {
+        .with_method("set", |inv| -> CallbackResult<Value> {
             let mut udata = inv.udata.as_mut().unwrap();
             let args = inv.args.as_ref().unwrap();
 
@@ -69,7 +69,7 @@ fn initialize(rubtle: &Rubtle) {
 
             Ok(Value::from(udata.value))
         })
-        .with_method("get", |inv| -> Result<Value> {
+        .with_method("get", |inv| -> CallbackResult<Value> {
             let udata = inv.udata.as_mut().unwrap();
 
             Ok(Value::from(udata.value))
