@@ -1,8 +1,8 @@
 ///
 /// @package Rubtle-Lib
 ///
-/// @file Rubtle tests - function
-/// @copyright 2020 Christoph Kappel <christoph@unexist.dev>
+/// @file Rubtle tests - global
+/// @copyright 2020-2021 Christoph Kappel <christoph@unexist.dev>
 /// @version $Id$
 ///
 /// This program can be distributed under the terms of the GNU GPLv2.
