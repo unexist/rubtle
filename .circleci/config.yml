@@ -3,7 +3,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: unexist/rust:0.0.2
+      - image: unexist/rust:0.0.3
 
     environment:
       TZ: "/usr/share/zoneinfo/Europe/Paris"
