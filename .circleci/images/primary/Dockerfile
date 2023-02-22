@@ -1,4 +1,3 @@
-FROM circleci/rust:latest
+FROM noucka/sqlite3:latest
 
-USER root
-RUN apt-get update && apt-get install -y llvm-dev libclang-dev clang libssl-dev
+RUN apt-get update && apt-get install -y make
